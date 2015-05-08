@@ -1,3 +1,8 @@
+pumukit_oai:
+    resource: "@PumukitOaiBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
 pumukit_cmar_podcast:
     resource: "@PumukitCmarPodcastBundle/Controller/"
     type:     annotation
