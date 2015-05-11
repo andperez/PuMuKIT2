@@ -20,55 +20,54 @@ class IndexController extends Controller
         switch ($request->query->get('verb', 'vacio')) {
             case 'vacio':
                 throw $this->createNotFoundException('Illegal OAI verb');
+            case 'Identify':
+                $this->forward('OaiBundle:Index:identify', array('verb'=>'Identify'));
+            break;
+            case 'ListMetadataFormats':
+                $this->forward('OaiBundle:Index:listMetadataFormats', array('verb'=>'ListMetadataFormats'));
+            break;
+            case 'ListSets':
+                $this->forward('OaiBundle:Index:listSets', array('verb'=>'ListSets'));
+            break;
+            case 'ListIdentifiers':
+                $this->forward('OaiBundle:Index:listIdentifiers', array('verb'=>'ListIdentifiers'));
+            break;
+            case 'ListRecords':
+                $this->forward('OaiBundle:Index:listRecords', array('verb'=>'ListRecords'));
+            break;
+            case 'GetRecord':
+                $this->forward('OaiBundle:Index:getRecord', array('verb'=>'GetRecord'));
+            break;
             default:
                 throw $this->createNotFoundException('Illegal OAI verb');
         }
     }
 
-    /**
-     * @Route("identify/oai.xml", defaults={"_format": "xml"}, name="pumukit_oai_identify")
-     * @Template()
-     */
     public function identifyAction()
-    {
+    { 
     }
 
-    /**
-     * @Route("listmetadataformats/oai.xml", defaults={"_format": "xml"}, name="pumukit_oai_listmetadataformats")
-     * @Template()
-     */
+
     public function listMetadataFormatsAction()
     {
     }
 
-    /**
-     * @Route("listsets/oai.xml", defaults={"_format": "xml"}, name="pumukit_oai_listsets")
-     * @Template()
-     */
+
     public function listSetsAction()
     {
     }
 
-    /**
-     * @Route("listidentifiers/oai.xml", defaults={"_format": "xml"}, name="pumukit_oai_listidentifiers")
-     * @Template()
-     */
+
     public function listIdentifiersAction()
     {
     }
 
-    /**
-     * @Route("listrecords/oai.xml", defaults={"_format": "xml"}, name="pumukit_oai_listrecords")
-     * @Template()
-     */
+
     public function listRecordsAction()
     {
     }
 
-    /**
-     * @Route("getrecord/oai.xml", defaults={"_format": "xml"}, name="pumukit_oai_getrecord")
-     * @Template()
-     */
+
     public function getRecordAction()
     {
     }
