@@ -17,31 +17,30 @@ class IndexController extends Controller
      */
     public function indexAction(Request $request)
     {
+        $verb = $request->query->get('verb');
+
         switch ($request->query->get('verb', 'vacio')) {
             case 'vacio':
-                throw $this->createNotFoundException('Illegal OAI verb');
+                return $this->errorAction('badVerb', 'Illegal OAI verb');
             case 'Identify':
-                $this->forward('OaiBundle:Index:identify', array('verb'=>'Identify'));
-            break;
+                return $this->forward('PumukitOaiBundle:Index:identify');
             case 'ListMetadataFormats':
-                $this->forward('OaiBundle:Index:listMetadataFormats', array('verb'=>'ListMetadataFormats'));
-            break;
+                return $this->forward('PumukitOaiBundle:Index:listMetadataFormats');
             case 'ListSets':
-                $this->forward('OaiBundle:Index:listSets', array('verb'=>'ListSets'));
-            break;
+                return $this->forward('PumukitOaiBundle:Index:listSets');
             case 'ListIdentifiers':
-                $this->forward('OaiBundle:Index:listIdentifiers', array('verb'=>'ListIdentifiers'));
-            break;
+                return $this->forward('PumukitOaiBundle:Index:listIdentifiers');
             case 'ListRecords':
-                $this->forward('OaiBundle:Index:listRecords', array('verb'=>'ListRecords'));
-            break;
+                return $this->forward('PumukitOaiBundle:Index:listRecords');
             case 'GetRecord':
-                $this->forward('OaiBundle:Index:getRecord', array('verb'=>'GetRecord'));
-            break;
+                return $this->forward('PumukitOaiBundle:Index:getRecord');
             default:
-                throw $this->createNotFoundException('Illegal OAI verb');
+                return $this->errorAction('badVerb', 'Illegal OAI verb');
         }
+
+        return array('verb' => $verb);
     }
+
 
     public function identifyAction()
     { 
