@@ -21,27 +21,25 @@ class IndexController extends Controller
 
         switch ($request->query->get('verb', 'vacio')) {
             case 'vacio':
-                return $this->errorAction('badVerb', 'Illegal OAI verb');
+                return array($this->forward('PumukitOaiBundle:Index:error'), 'verb' => 'badVerb', 'msg' => 'Illegal OAI verb');
             case 'Identify':
-                return $this->forward('PumukitOaiBundle:Index:identify');
+                return array($this->forward('PumukitOaiBundle:Index:identify'), 'verb' => $verb);
             case 'ListMetadataFormats':
-                return $this->forward('PumukitOaiBundle:Index:listMetadataFormats');
+                return array($this->forward('PumukitOaiBundle:Index:listMetadataFormats'), 'verb' => $verb);
             case 'ListSets':
-                return $this->forward('PumukitOaiBundle:Index:listSets');
+                return array($this->forward('PumukitOaiBundle:Index:listSets'), 'verb' => $verb);
             case 'ListIdentifiers':
-                return $this->forward('PumukitOaiBundle:Index:listIdentifiers');
+                return array($this->forward('PumukitOaiBundle:Index:listIdentifiers'), 'verb' => $verb);
             case 'ListRecords':
-                return $this->forward('PumukitOaiBundle:Index:listRecords');
+                return array($this->forward('PumukitOaiBundle:Index:listRecords'), 'verb' => $verb);
             case 'GetRecord':
-                return $this->forward('PumukitOaiBundle:Index:getRecord');
+                return array($this->forward('PumukitOaiBundle:Index:getRecord'), 'verb' => $verb);
             default:
-                return $this->errorAction('badVerb', 'Illegal OAI verb');
+                return array($this->forward('PumukitOaiBundle:Index:error'), 'verb' => 'badVerb', 'msg' => 'Illegal OAI verb');
         }
-
-        return array('verb' => $verb);
     }
 
-
+    
     public function identifyAction()
     { 
     }
@@ -70,4 +68,12 @@ class IndexController extends Controller
     public function getRecordAction()
     {
     }
+
+    /*protected function errorAction($cod, $msg = '')
+    {
+        $this->cod = $cod;
+        $this->msg = $msg;
+        return array('cod' => ($this->cod), 'msg' => ($this->msg));
+    }*/
 }
+
