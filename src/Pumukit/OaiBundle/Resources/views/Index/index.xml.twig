@@ -12,7 +12,7 @@
          xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
          http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
   		
-  		<responseDate></responseDate>
+  		<responseDate>{{ "now"|date("Y-m-d\TH:i:s\Z") }}</responseDate>
   		
   		{% if verb == "Identify" %}
   			{% include 'PumukitOaiBundle:Index:identify.xml.twig' %}
