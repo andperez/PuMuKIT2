@@ -4,6 +4,7 @@ namespace Pumukit\OaiBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 
@@ -21,7 +22,7 @@ class IndexController extends Controller
 
         switch ($request->query->get('verb', 'vacio')) {
             case 'vacio':
-                return array($this->forward('PumukitOaiBundle:Index:error'), 'verb' => 'badVerb', 'msg' => 'Illegal OAI verb');
+                return $this->error('badVerb', 'Illegal OAI verb');
             case 'Identify':
                 return array($this->forward('PumukitOaiBundle:Index:identify'), 'verb' => $verb);
             case 'ListMetadataFormats':
@@ -35,13 +36,14 @@ class IndexController extends Controller
             case 'GetRecord':
                 return array($this->forward('PumukitOaiBundle:Index:getRecord'), 'verb' => $verb);
             default:
-                return array($this->forward('PumukitOaiBundle:Index:error'), 'verb' => 'badVerb', 'msg' => 'Illegal OAI verb');
+                return $this->error('badVerb', 'Illegal OAI verb');
         }
     }
 
     
     public function identifyAction()
     { 
+        $test = 1;
     }
 
 
@@ -67,13 +69,16 @@ class IndexController extends Controller
 
     public function getRecordAction()
     {
+        if ($this->request->query->get('metadataPrefix', 'vacio') != 'oai_dc'){
+            return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
+        }
     }
 
-    /*protected function errorAction($cod, $msg = '')
+    protected function error($cod, $msg = '')
     {
         $this->cod = $cod;
         $this->msg = $msg;
-        return array('cod' => ($this->cod), 'msg' => ($this->msg));
-    }*/
+        return $this->render('PumukitOaiBundle:Index:error.xml.twig', array('cod' => ($this->cod), 'msg' => ($this->msg)));
+    }
 }
 
