@@ -24,17 +24,17 @@ class IndexController extends Controller
             case 'vacio':
                 return $this->error('badVerb', 'Illegal OAI verb');
             case 'Identify':
-                return array($this->forward('PumukitOaiBundle:Index:identify'), 'verb' => $verb);
+                return $this->forward('PumukitOaiBundle:Index:identify', array('verb' => $verb));
             case 'ListMetadataFormats':
-                return array($this->forward('PumukitOaiBundle:Index:listMetadataFormats'), 'verb' => $verb);
+                return $this->forward('PumukitOaiBundle:Index:listMetadataFormats', array('verb' => $verb));
             case 'ListSets':
-                return array($this->forward('PumukitOaiBundle:Index:listSets'), 'verb' => $verb);
+                return $this->forward('PumukitOaiBundle:Index:listSets', array('verb' => $verb));
             case 'ListIdentifiers':
-                return array($this->forward('PumukitOaiBundle:Index:listIdentifiers'), 'verb' => $verb);
+                return $this->forward('PumukitOaiBundle:Index:listIdentifiers', array('verb' => $verb));
             case 'ListRecords':
-                return array($this->forward('PumukitOaiBundle:Index:listRecords'), 'verb' => $verb);
+                return $this->forward('PumukitOaiBundle:Index:listRecords', array('verb' => $verb));
             case 'GetRecord':
-                return array($this->forward('PumukitOaiBundle:Index:getRecord'), 'verb' => $verb);
+                return $this->forward('PumukitOaiBundle:Index:getRecord', array('verb' => $verb));
             default:
                 return $this->error('badVerb', 'Illegal OAI verb');
         }
@@ -43,9 +43,8 @@ class IndexController extends Controller
     
     public function identifyAction()
     { 
-        $test = 1;
+        return $this->render('PumukitOaiBundle:Index:identify.xml.twig');
     }
-
 
     public function listMetadataFormatsAction()
     {
@@ -65,7 +64,6 @@ class IndexController extends Controller
     public function listRecordsAction()
     {
     }
-
 
     public function getRecordAction()
     {
