@@ -16,62 +16,87 @@ class IndexController extends Controller
      * @Route("/oai.xml", defaults={"_format": "xml"}, name="pumukit_oai_index")
      * @Template()
      */
-    public function indexAction(Request $request)
+    public function indexAction()
     {
-        $verb = $request->query->get('verb');
+        $verb = $this->getRequest()->query->get('verb');
 
-        switch ($request->query->get('verb', 'vacio')) {
+        switch ($this->getRequest()->query->get('verb', 'vacio')) {
             case 'vacio':
                 return $this->error('badVerb', 'Illegal OAI verb');
-            case 'Identify':
-                return $this->forward('PumukitOaiBundle:Index:identify', array('verb' => $verb));
-            case 'ListMetadataFormats':
-                return $this->forward('PumukitOaiBundle:Index:listMetadataFormats', array('verb' => $verb));
-            case 'ListSets':
-                return $this->forward('PumukitOaiBundle:Index:listSets', array('verb' => $verb));
-            case 'ListIdentifiers':
-                return $this->forward('PumukitOaiBundle:Index:listIdentifiers', array('verb' => $verb));
-            case 'ListRecords':
-                return $this->forward('PumukitOaiBundle:Index:listRecords', array('verb' => $verb));
             case 'GetRecord':
-                return $this->forward('PumukitOaiBundle:Index:getRecord', array('verb' => $verb));
+                return $this->forward('PumukitOaiBundle:Index:getRecord');
+            case 'Identify':
+                return $this->forward('PumukitOaiBundle:Index:identify');
+            case 'ListIdentifiers':
+                return $this->forward('PumukitOaiBundle:Index:listIdentifiers');
+            case 'ListRecords':
+                return $this->forward('PumukitOaiBundle:Index:listRecords');
+            case 'ListMetadataFormats':
+                return $this->forward('PumukitOaiBundle:Index:listMetadataFormats');
+            case 'ListSets':
+                return $this->forward('PumukitOaiBundle:Index:listSets');
             default:
                 return $this->error('badVerb', 'Illegal OAI verb');
         }
     }
 
-    
+
+    /*
+     * Genera la salida de GetRecord
+     */
+    public function getRecordAction()
+    {
+        return $this->render('PumukitOaiBundle:Index:getRecord.xml.twig');
+    }
+
+    /*
+     * Genera la salida del Identify
+     */
     public function identifyAction()
     { 
         return $this->render('PumukitOaiBundle:Index:identify.xml.twig');
     }
 
-    public function listMetadataFormatsAction()
-    {
-    }
-
-
-    public function listSetsAction()
-    {
-    }
-
-
+    /*
+     * Genera la salida de ListIdentifiers
+     */
     public function listIdentifiersAction()
     {
+        $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
+        $mmObjColl = $mmObjColl->findAll();
+
+        return $this->render('PumukitOaiBundle:Index:listIdentifiers.xml.twig', array('multimediaObjects' => $mmObjColl));
     }
 
-
+    /*
+     * Genera la salida de listRecords
+     */
     public function listRecordsAction()
     {
+        $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
+
+        return $this->render('PumukitOaiBundle:Index:listRecords.xml.twig');
     }
 
-    public function getRecordAction()
+    /*
+     * Genera la salida de listMetadataFormats
+     */
+    public function listMetadataFormatsAction()
     {
-        if ($this->request->query->get('metadataPrefix', 'vacio') != 'oai_dc'){
-            return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
-        }
+        return $this->render('PumukitOaiBundle:Index:listMetadataFormats.xml.twig');
     }
 
+    /*
+     * Genera la salida de listSets
+     */
+    public function listSetsAction()
+    {
+        return $this->render('PumukitOaiBundle:Index:listSets.xml.twig');
+    }
+
+    /*
+     * Genera el XML de error
+     */
     protected function error($cod, $msg = '')
     {
         $this->cod = $cod;

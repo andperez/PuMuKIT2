@@ -7,5 +7,8 @@
     {{ url('pumukit_oai_index') }}
   </request>
   <ListIdentifiers>
+    {% for multimediaObject in multimediaObjects %}
+      {% include 'PumukitOaiBundle:Index:header.xml.twig' with {'multimediaObject': multimediaObject} %}
+    {% endfor %}
   </ListIdentifiers>
 </OAI-PMH>
