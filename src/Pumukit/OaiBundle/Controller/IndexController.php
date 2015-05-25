@@ -16,15 +16,15 @@ class IndexController extends Controller
      * @Route("/oai.xml", defaults={"_format": "xml"}, name="pumukit_oai_index")
      * @Template()
      */
-    public function indexAction()
+    public function indexAction(Request $request)
     {
-        $verb = $this->getRequest()->query->get('verb');
+        $verb = $request->query->get('verb');
 
-        switch ($this->getRequest()->query->get('verb', 'vacio')) {
+        switch ($request->query->get('verb', 'vacio')) {
             case 'vacio':
                 return $this->error('badVerb', 'Illegal OAI verb');
             case 'GetRecord':
-                return $this->forward('PumukitOaiBundle:Index:getRecord');
+                return $this->forward('PumukitOaiBundle:Index:getRecord', array("request" => $request));
             case 'Identify':
                 return $this->forward('PumukitOaiBundle:Index:identify');
             case 'ListIdentifiers':
@@ -44,8 +44,14 @@ class IndexController extends Controller
     /*
      * Genera la salida de GetRecord
      */
-    public function getRecordAction()
+    public function getRecordAction($request)
     {
+        $metadataPrefix = $request->query->get('metadataPrefix');
+        
+        if($request->query->get('metadataPrefix', 'vacio') != 'oai_dc'){
+            return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
+        }
+
         return $this->render('PumukitOaiBundle:Index:getRecord.xml.twig');
     }
 
