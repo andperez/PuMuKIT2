@@ -69,7 +69,7 @@ class IndexController extends Controller
         if($request->query->get('metadataPrefix', 'vacio') != 'oai_dc'){
             return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
         }
-        
+
         $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
         $mmObjColl = $mmObjColl->findAll();
 
@@ -81,6 +81,10 @@ class IndexController extends Controller
      */
     public function listRecordsAction()
     {
+        if($request->query->get('metadataPrefix', 'vacio') != 'oai_dc'){
+            return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
+        }
+        
         $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
         $mmObjColl = $mmObjColl->findAll();
 
