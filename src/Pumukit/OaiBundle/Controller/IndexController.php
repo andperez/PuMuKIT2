@@ -92,7 +92,10 @@ class IndexController extends Controller
      */
     public function listSetsAction()
     {
-        return $this->render('PumukitOaiBundle:Index:listSets.xml.twig');
+        $allSeries = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:Series');
+        $allSeries = $allSeries->findAll();
+
+        return $this->render('PumukitOaiBundle:Index:listSets.xml.twig', array('allSeries' => $allSeries));
     }
 
     /*
