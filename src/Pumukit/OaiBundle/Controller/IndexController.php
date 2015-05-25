@@ -50,7 +50,15 @@ class IndexController extends Controller
             return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
         }
 
-        return $this->render('PumukitOaiBundle:Index:getRecord.xml.twig');
+        $identifier = $request->query->get('identifier');
+
+        $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
+        $mmObj = $mmObjColl->find(array('id'  => $identifier));
+
+        if ($mmObj == null)
+            return $this->error('idDoesNotExist', 'The value of the identifier argument is unknown or illegal in this repository');
+
+        return $this->render('PumukitOaiBundle:Index:getRecord.xml.twig', array('multimediaObject' => $mmObj, 'identifier' => $identifier));
     }
 
     /*
@@ -84,7 +92,7 @@ class IndexController extends Controller
         if($request->query->get('metadataPrefix', 'vacio') != 'oai_dc'){
             return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
         }
-        
+
         $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
         $mmObjColl = $mmObjColl->findAll();
 

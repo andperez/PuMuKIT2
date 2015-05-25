@@ -3,8 +3,9 @@
         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
         http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
   	<responseDate>{{ "now"|date("Y-m-d\TH:i:s\Z") }}</responseDate>
-  	<request verb="GetRecord" identifier=""
-     	metadataPrefix="oai_dc">{{ url('pumukit_oai_index') }}</request>
+  	<request verb="GetRecord" identifier="{{identifier}}"
+  		metadataPrefix="oai_dc">{{ url('pumukit_oai_index') }}</request>
   	<GetRecord>
+  		{% include 'PumukitOaiBundle:Index:record.xml.twig' with {'multimediaObject': multimediaObject} %}
   	</GetRecord>
 </OAI-PMH>
