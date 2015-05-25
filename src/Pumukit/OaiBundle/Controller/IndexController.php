@@ -74,8 +74,9 @@ class IndexController extends Controller
     public function listRecordsAction()
     {
         $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
+        $mmObjColl = $mmObjColl->findAll();
 
-        return $this->render('PumukitOaiBundle:Index:listRecords.xml.twig');
+        return $this->render('PumukitOaiBundle:Index:listRecords.xml.twig', array('multimediaObjects' => $mmObjColl));
     }
 
     /*
