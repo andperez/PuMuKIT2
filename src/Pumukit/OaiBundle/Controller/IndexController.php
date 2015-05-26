@@ -81,6 +81,10 @@ class IndexController extends Controller
         $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
         $mmObjColl = $mmObjColl->findAll();
 
+        if(count($mmObjColl) == 0){
+            return $this->error('noRecordsMatch', 'The combination of the values of the from, until, and set arguments results in an empty list');
+        }
+
         return $this->render('PumukitOaiBundle:Index:listIdentifiers.xml.twig', array('multimediaObjects' => $mmObjColl));
     }
 
