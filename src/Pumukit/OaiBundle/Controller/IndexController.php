@@ -32,7 +32,7 @@ class IndexController extends Controller
             case 'ListRecords':
                 return $this->forward('PumukitOaiBundle:Index:listRecords');
             case 'ListMetadataFormats':
-                return $this->forward('PumukitOaiBundle:Index:listMetadataFormats');
+                return $this->forward('PumukitOaiBundle:Index:listMetadataFormats', array("request" => $request));
             case 'ListSets':
                 return $this->forward('PumukitOaiBundle:Index:listSets');
             default:
@@ -102,9 +102,17 @@ class IndexController extends Controller
     /*
      * Genera la salida de listMetadataFormats
      */
-    public function listMetadataFormatsAction()
+    public function listMetadataFormatsAction($request)
     {
-        return $this->render('PumukitOaiBundle:Index:listMetadataFormats.xml.twig');
+        $identifier = $request->query->get('identifier');
+
+        $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
+        $mmObj = $mmObjColl->find(array('id'  => $identifier));
+
+        if ($mmObj == null)
+            return $this->error('idDoesNotExist', 'The value of the identifier argument is unknown or illegal in this repository');
+
+        return $this->render('PumukitOaiBundle:Index:listMetadataFormats.xml.twig', array('identifier' => $identifier));
     }
 
     /*
