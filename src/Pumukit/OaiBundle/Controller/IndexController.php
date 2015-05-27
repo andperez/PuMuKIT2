@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Doctrine\Common\Collections\Criteria;
 
 
 class IndexController extends Controller
@@ -28,9 +29,9 @@ class IndexController extends Controller
             case 'Identify':
                 return $this->forward('PumukitOaiBundle:Index:identify');
             case 'ListIdentifiers':
-                return $this->forward('PumukitOaiBundle:Index:listIdentifiers');
+                return $this->forward('PumukitOaiBundle:Index:listIdentifiers', array("request" => $request));
             case 'ListRecords':
-                return $this->forward('PumukitOaiBundle:Index:listRecords');
+                return $this->forward('PumukitOaiBundle:Index:listRecords', array("request" => $request));
             case 'ListMetadataFormats':
                 return $this->forward('PumukitOaiBundle:Index:listMetadataFormats', array("request" => $request));
             case 'ListSets':
@@ -72,11 +73,14 @@ class IndexController extends Controller
     /*
      * Genera la salida de ListIdentifiers
      */
-    public function listIdentifiersAction()
+    public function listIdentifiersAction($request)
     {
         if($request->query->get('metadataPrefix', 'vacio') != 'oai_dc'){
             return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
         }
+
+        $c = new Criteria();
+        $this->filter($c, $request);
 
         $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
         $mmObjColl = $mmObjColl->findAll();
@@ -91,7 +95,7 @@ class IndexController extends Controller
     /*
      * Genera la salida de listRecords
      */
-    public function listRecordsAction()
+    public function listRecordsAction($request)
     {
         if($request->query->get('metadataPrefix', 'vacio') != 'oai_dc'){
             return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
@@ -138,6 +142,16 @@ class IndexController extends Controller
         $this->cod = $cod;
         $this->msg = $msg;
         return $this->render('PumukitOaiBundle:Index:error.xml.twig', array('cod' => ($this->cod), 'msg' => ($this->msg)));
+    }
+
+    /*
+     * Modifica el objeto criteria de entrada añadiendo filtros de fechas (until & from) y de set si están definidos en la URI
+     */
+    protected function filter($c, $request){
+
+        if($request->query->get('from')){
+        }
+
     }
 }
 
