@@ -75,6 +75,10 @@ class IndexController extends Controller
      */
     public function listIdentifiersAction($request)
     {
+        $from = $request->query->get('from');
+        $until = $request->query->get('until');
+        $set = $request->query->get('set');
+
         if($request->query->get('metadataPrefix', 'vacio') != 'oai_dc'){
             return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
         }
@@ -85,7 +89,8 @@ class IndexController extends Controller
             return $this->error('noRecordsMatch', 'The combination of the values of the from, until, and set arguments results in an empty list');
         }
 
-        return $this->render('PumukitOaiBundle:Index:listIdentifiers.xml.twig', array('multimediaObjects' => $mmObjColl));
+        return $this->render('PumukitOaiBundle:Index:listIdentifiers.xml.twig', 
+            array('multimediaObjects' => $mmObjColl, 'from' => $from, 'until' => $until, 'set' => $set));
     }
 
     /*
@@ -147,7 +152,6 @@ class IndexController extends Controller
 
         $repository_multimediaObjects = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
         $queryBuilder = $repository_multimediaObjects->createStandardQueryBuilder();
-
 
         if($request->query->get('from')){
             $from = \DateTime::createFromFormat("Y/m/d", $request->query->get('from'));
