@@ -79,8 +79,7 @@ class IndexController extends Controller
             return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
         }
 
-        $c = new Criteria();
-        $this->filter($c, $request);
+        $queryBuilder = $this->filter($request);
 
         $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
         $mmObjColl = $mmObjColl->findAll();
@@ -147,11 +146,25 @@ class IndexController extends Controller
     /*
      * Modifica el objeto criteria de entrada añadiendo filtros de fechas (until & from) y de set si están definidos en la URI
      */
-    protected function filter($c, $request){
+    protected function filter($request){
+
+        $repository_multimediaObjects = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
+        $queryBuilder = $repository_multimediaObjects->createStandardQueryBuilder();
 
         if($request->query->get('from')){
+            $from = \DateTime::createFromFormat("Y/m/d", $request->query->get('from'));
+            $queryBuilder->field('public_date')->gte($from);
         }
 
+        if($request->query->get('until')){
+            $until = \DateTime::createFromFormat("Y/m/d", $request->query->get('until'));
+            $queryBuilder->field('public_date')->lte($until);
+        }
+
+        if(($request->query->get('set')){
+        }
+
+        return $queryBuilder;
     }
 }
 
