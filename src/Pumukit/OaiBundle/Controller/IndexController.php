@@ -98,14 +98,22 @@ class IndexController extends Controller
      */
     public function listRecordsAction($request)
     {
+        $from = $request->query->get('from');
+        $until = $request->query->get('until');
+        $set = $request->query->get('set');
+
         if($request->query->get('metadataPrefix', 'vacio') != 'oai_dc'){
             return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
         }
 
-        $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
-        $mmObjColl = $mmObjColl->findAll();
+        $mmObjColl = $this->filter($request);
 
-        return $this->render('PumukitOaiBundle:Index:listRecords.xml.twig', array('multimediaObjects' => $mmObjColl));
+        if(count($mmObjColl) == 0){
+            return $this->error('noRecordsMatch', 'The combination of the values of the from, until, and set arguments results in an empty list');
+        }
+
+        return $this->render('PumukitOaiBundle:Index:listRecords.xml.twig', 
+            array('multimediaObjects' => $mmObjColl, 'from' => $from, 'until' => $until, 'set' => $set));
     }
 
     /*

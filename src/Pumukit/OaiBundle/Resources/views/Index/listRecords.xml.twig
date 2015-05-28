@@ -3,7 +3,7 @@
   xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
   http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
   <responseDate>{{ "now"|date("Y-m-d\TH:i:s\Z") }}</responseDate>
-  <request verb="ListRecords" metadataPrefix="oai_dc">
+  <request verb="ListRecords" metadataPrefix="oai_dc" from="{{from}}" until="{{until}}" set="{{set}}">
     {{ url('pumukit_oai_index') }}
   </request>
   <ListRecords>
