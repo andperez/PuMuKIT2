@@ -79,10 +79,7 @@ class IndexController extends Controller
             return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
         }
 
-        $queryBuilder = $this->filter($request);
-
-        $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
-        $mmObjColl = $mmObjColl->findAll();
+        $mmObjColl = $this->filter($request);
 
         if(count($mmObjColl) == 0){
             return $this->error('noRecordsMatch', 'The combination of the values of the from, until, and set arguments results in an empty list');
@@ -151,6 +148,7 @@ class IndexController extends Controller
         $repository_multimediaObjects = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
         $queryBuilder = $repository_multimediaObjects->createStandardQueryBuilder();
 
+
         if($request->query->get('from')){
             $from = \DateTime::createFromFormat("Y/m/d", $request->query->get('from'));
             $queryBuilder->field('public_date')->gte($from);
@@ -161,10 +159,12 @@ class IndexController extends Controller
             $queryBuilder->field('public_date')->lte($until);
         }
 
-        if(($request->query->get('set')){
+        if($request->query->get('set')){
         }
 
-        return $queryBuilder;
+        $objects = $queryBuilder->getQuery()->execute();
+
+        return $objects;
     }
 }
 
