@@ -159,22 +159,27 @@ class IndexController extends Controller
     protected function filter($request){
 
         $repository_multimediaObjects = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
-        $queryBuilder = $repository_multimediaObjects->createStandardQueryBuilder();
+        $repository_series = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:Series');
+        $queryBuilder_multimediaObjects = $repository_multimediaObjects->createStandardQueryBuilder();
+        $queryBuilder_series = $repository_series->createQueryBuilder();
 
         if($request->query->get('from')){
             $from = \DateTime::createFromFormat("Y/m/d", $request->query->get('from'));
-            $queryBuilder->field('public_date')->gte($from);
+            $queryBuilder_multimediaObjects->field('public_date')->gte($from);
         }
 
         if($request->query->get('until')){
             $until = \DateTime::createFromFormat("Y/m/d", $request->query->get('until'));
-            $queryBuilder->field('public_date')->lte($until);
+            $queryBuilder_multimediaObjects->field('public_date')->lte($until);
         }
 
-        if($request->query->get('set')){
+        if(($request->query->get('set'))&&(is_int($request->query->get('set')))){
         }
 
-        $objects = $queryBuilder->getQuery()->execute();
+        if(($request->query->get('set'))&&($ret = strstr($request->query->get('set'), ':('))){
+        }
+
+        $objects = $queryBuilder_multimediaObjects->getQuery()->execute();
 
         return $objects;
     }
