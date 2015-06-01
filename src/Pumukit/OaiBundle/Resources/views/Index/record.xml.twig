@@ -7,8 +7,8 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
        xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ 
        http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
-      <dc:title>{{ multimediaObject.getTitle() }}</dc:title> 
-      <dc:description>{{ multimediaObject.getDescription() }}</dc:description>     
+      <dc:title><![CDATA[{{ multimediaObject.getTitle() }}]]></dc:title> 
+      <dc:description><![CDATA[{{ multimediaObject.getDescription() }}]]></dc:description>     
       <dc:date>{{ multimediaObject.getPublicDate|date("r") }}</dc:date>
       <dc:identifier xsi:type="dcterms:URI" id="uid"></dc:identifier>
       <dc:type>Moving Image</dc:type>
