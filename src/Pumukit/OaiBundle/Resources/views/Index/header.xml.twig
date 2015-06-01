@@ -1,5 +1,5 @@
 <header>
   <identifier>oai:<![CDATA[{{multimediaObject.getCopyright()}}/{{multimediaObject.getId()}}]]></identifier>
-  <datestamp>{{multimediaObject.getPublicDate()|date("r")}}</datestamp>
-  <setSpec><![CDATA[{{multimediaObject.getSeries().getSeriesType()}}:({{multimediaObject.getSeries().getId()}})]]></setSpec>
+  <datestamp>{{multimediaObject.getPublicDate()|date('Y-m-d')}}</datestamp>
+  <setSpec><![CDATA[{{multimediaObject.getSeries().getId()}}]]></setSpec>
 </header>
