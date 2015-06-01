@@ -160,6 +160,7 @@ class IndexController extends Controller
 
         $repository_multimediaObjects = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
         $repository_series = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:Series');
+        
         $queryBuilder_multimediaObjects = $repository_multimediaObjects->createStandardQueryBuilder();
         $queryBuilder_series = $repository_series->createQueryBuilder();
 
@@ -173,16 +174,13 @@ class IndexController extends Controller
             $queryBuilder_multimediaObjects->field('public_date')->lte($until);
         }
 
-        $objects = $queryBuilder_multimediaObjects->getQuery()->execute();
-
         if($request->query->get('set')){
-            $queryBuilder_series->field('id')->equals($request->query->get('set'));
-            $series = $queryBuilder_series->getQuery()->execute();
-
-            foreach ($series as $serie) {
-                $objects = $serie->getMultimediaObjects();
-            }
+            $set = $request->query->get('set');
+            $series = $repository_series->find(array('id'  => $set));
+            $queryBuilder_multimediaObjects->field('series')->references($series);
         }
+
+        $objects = $queryBuilder_multimediaObjects->getQuery()->execute();
 
         return $objects;
     }
