@@ -173,13 +173,16 @@ class IndexController extends Controller
             $queryBuilder_multimediaObjects->field('public_date')->lte($until);
         }
 
-        if(($request->query->get('set'))&&(is_int($request->query->get('set')))){
-        }
-
-        if(($request->query->get('set'))&&($ret = strstr($request->query->get('set'), ':('))){
-        }
-
         $objects = $queryBuilder_multimediaObjects->getQuery()->execute();
+
+        if($request->query->get('set')){
+            $queryBuilder_series->field('id')->equals($request->query->get('set'));
+            $series = $queryBuilder_series->getQuery()->execute();
+
+            foreach ($series as $serie) {
+                $objects = $serie->getMultimediaObjects();
+            }
+        }
 
         return $objects;
     }
