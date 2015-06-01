@@ -1,5 +1,5 @@
 <header>
-  <identifier>oai:{{multimediaObject.getCopyright()}}/{{multimediaObject.getId()}}</identifier>
+  <identifier>oai:<![CDATA[{{multimediaObject.getCopyright()}}/{{multimediaObject.getId()}}]]></identifier>
   <datestamp>{{multimediaObject.getPublicDate()|date("r")}}</datestamp>
-  <setSpec>{{multimediaObject.getSeries().getSeriesType()}}:({{multimediaObject.getSeries().getId()}})</setSpec>
+  <setSpec><![CDATA[{{multimediaObject.getSeries().getSeriesType()}}:({{multimediaObject.getSeries().getId()}})]]></setSpec>
 </header>
