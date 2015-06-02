@@ -9,8 +9,8 @@
   <ListSets>
     {% for series in allSeries %}
       <set>
-        <setSpec>{{ series.getId() }}</setSpec>
-        <setName>{{ series.getTitle() }}</setName>
+        <setSpec><![CDATA[{{series.getId()}}]]></setSpec>
+        <setName><![CDATA[{{series.getTitle()}}]]></setName>
       </set> 
     {% endfor %}
   </ListSets>
