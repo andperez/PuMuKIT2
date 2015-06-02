@@ -10,5 +10,6 @@
     {% for multimediaObject in multimediaObjects %}
       {% include 'PumukitOaiBundle:Index:record.xml.twig' with {'multimediaObject': multimediaObject} %}
     {% endfor %}
+    <resumptionToken expirationDate="" completeListSize="" cursor="">ListRecords#10#set={{set}}#from={{from}}#until={{until}}#metadataPrefix=oai_dc</resumptionToken>
   </ListRecords>
 </OAI-PMH>
