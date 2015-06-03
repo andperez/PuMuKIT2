@@ -7,7 +7,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 
-
 class IndexController extends Controller
 {
 
@@ -76,6 +75,7 @@ class IndexController extends Controller
         $from = $request->query->get('from');
         $until = $request->query->get('until');
         $set = $request->query->get('set');
+        $resumptionToken = $request->query->get('resumptionToken');
 
         if($request->query->get('metadataPrefix', 'vacio') != 'oai_dc'){
             return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
@@ -85,6 +85,10 @@ class IndexController extends Controller
 
         if(count($mmObjColl) == 0){
             return $this->error('noRecordsMatch', 'The combination of the values of the from, until, and set arguments results in an empty list');
+        }
+
+        if($this->validateToken($resumptionToken)){
+            return $this->error('badResumptionToken', 'The value of the resumptionToken argument is invalid or expired');
         }
 
         return $this->render('PumukitOaiBundle:Index:listIdentifiers.xml.twig', 
@@ -99,6 +103,7 @@ class IndexController extends Controller
         $from = $request->query->get('from');
         $until = $request->query->get('until');
         $set = $request->query->get('set');
+        $resumptionToken = $request->query->get('resumptionToken');
 
         if($request->query->get('metadataPrefix', 'vacio') != 'oai_dc'){
             return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
@@ -181,6 +186,17 @@ class IndexController extends Controller
         $objects = $queryBuilder_multimediaObjects->getQuery()->execute();
 
         return $objects;
+    }
+
+
+    /*
+     * Valida si el token pasado en resumptionToken es correcto
+     */
+    protected function validateToken($resumptionToken){
+
+        //var_dump($resumptionToken);
+
+        return false;
     }
 }
 
