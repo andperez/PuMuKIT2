@@ -12,11 +12,11 @@
       <dc:date>{{ multimediaObject.getPublicDate|date('Y-m-d') }}</dc:date>
       <dc:identifier xsi:type="dcterms:URI" id="uid"></dc:identifier>
       {% for track in multimediaObject.getTracks %}
-        <dc:type>{{ track.getMimeType() }}</dc:type>
-        <dc:format>{{ track.getFormat() }}</dc:format>
+        <dc:type><![CDATA[{{ track.getMimeType() }}]]></dc:type>
+        <dc:format><![CDATA[{{ track.getFormat() }}]]></dc:format>
       {% endfor %}
       {% for tag in multimediaObject.getTags() %}
-        <dc:subject>{{tag.getTitle()}}</dc:subject>
+        <dc:subject><![CDATA[{{tag.getTitle()}}]]></dc:subject>
       {% endfor %}
       <dc:creator><![CDATA[{{ pumukit2_info['email'] }}]]></dc:creator>
       <dc:publisher><![CDATA[{{ pumukit2_info['email'] }}]]></dc:publisher>
