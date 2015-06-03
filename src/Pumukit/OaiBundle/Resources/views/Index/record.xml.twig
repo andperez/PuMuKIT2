@@ -11,8 +11,13 @@
       <dc:description><![CDATA[{{ multimediaObject.getDescription() }}]]></dc:description>     
       <dc:date>{{ multimediaObject.getPublicDate|date('Y-m-d') }}</dc:date>
       <dc:identifier xsi:type="dcterms:URI" id="uid"></dc:identifier>
-      <dc:type>Moving Image</dc:type>
-      <dc:format>video/x-ms-wmv</dc:format>
+      {% for track in multimediaObject.getTracks %}
+        <dc:type>{{ track.getMimeType() }}</dc:type>
+        <dc:format>{{ track.getFormat() }}</dc:format>
+      {% endfor %}
+      {% for tag in multimediaObject.getTags() %}
+        <dc:subject>{{tag.getTitle()}}</dc:subject>
+      {% endfor %}
       <dc:creator><![CDATA[{{ pumukit2_info['email'] }}]]></dc:creator>
       <dc:publisher><![CDATA[{{ pumukit2_info['email'] }}]]></dc:publisher>
       <dc:language>{{ multimediaObject.getLocale() }}</dc:language>
