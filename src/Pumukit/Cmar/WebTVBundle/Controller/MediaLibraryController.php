@@ -31,10 +31,9 @@ class MediaLibraryController extends Controller
      */
     public function mainConferencesAction(Request $request)
     {
-        $title = "Conferences";
-        $tagName = 'PUDEPD1';
+        $tagName = 'PUDEMAINCONF';
 
-        return $this->action($title, $tagName, "pumukitcmarwebtv_library_mainconferences", $request);
+        return $this->action(null, $tagName, "pumukitcmarwebtv_library_mainconferences", $request);
     }
 
 
@@ -45,10 +44,9 @@ class MediaLibraryController extends Controller
      */
     public function promotionalAction(Request $request)
     {
-        $title = "Promotional and corporate";
-        $tagName = 'PUDEPD2';
+        $tagName = 'PUDEPROMO';
 
-        return $this->action($title, $tagName, "pumukitcmarwebtv_library_promotional", $request);
+        return $this->action(null, $tagName, "pumukitcmarwebtv_library_promotional", $request);
     }
 
 
@@ -59,10 +57,9 @@ class MediaLibraryController extends Controller
      */
     public function pressAreaAction(Request $request)
     {
-        $title = "Press Area";
-        $tagName = 'PUDEPD3';
+        $tagName = 'PUDEPRESS';
 
-        return $this->action($title, $tagName, "pumukitcmarwebtv_library_pressarea", $request);
+        return $this->action(null, $tagName, "pumukitcmarwebtv_library_pressarea", $request);
     }
 
 
@@ -73,11 +70,10 @@ class MediaLibraryController extends Controller
      */
     public function projectSupportAction(Request $request)
     {
-        $title = "Project Support";
-        $tagName = 'PUDEPD4';
+        $tagName = 'PUDESUPPORT';
 
         /* TODO $serials["all"] = SerialPeer::retrieveByPKs(array(6, 9, 7)); */
-        return $this->action($title, $tagName, "pumukitcmarwebtv_library_projectsupport", $request);
+        return $this->action(null, $tagName, "pumukitcmarwebtv_library_projectsupport", $request);
     }
 
     /**
@@ -87,30 +83,26 @@ class MediaLibraryController extends Controller
      */
     public function congressesAction(Request $request)
     {
-      $title = "Congresses";
-      $tagName = 'PUDEPD5';
-
+        $tagName = 'PUDECONGRESSES';
+        
         // TODO review: check locale, check defintion of congresses
         // $series = $seriesRepo->findBy(array('keyword.en' => 'congress'), array('public_date' => 'desc'));
-        return $this->action($title, $tagName, "pumukitcmarwebtv_library_congresses", $request);
+        return $this->action(null, $tagName, "pumukitcmarwebtv_library_congresses", $request);
     }
 
     /**
-     * @Route("/i")
-     * @Route("/institutional", name="pumukitcmarwebtv_library_institutional")
-     * @Template("PumukitCmarWebTVBundle:MediaLibrary:multidisplay.html.twig")
+     * @Route("/librarymh")
+     * @Route("/lectures", name="pumukitcmarwebtv_library_lectures")
+     * @Template("PumukitCmarWebTVBundle:MediaLibrary:opencastindex.html.twig")
      */
-    public function institutionalAction(Request $request)
+    public function lecturesAction(Request $request)
     {
-        $title = "Institutional";
-        $tagName = 'PUDEPD6';
-
-        //TODO review
-        //$tagCod = new \MongoRegex('/^U9901../'); // UNESCO tags for institutions
-        //$series = $seriesRepo->findByTagCodAndDisplayStatus($tagCod, $display);
-        return $this->action($title, $tagName, "pumukitcmarwebtv_library_institutional", $request);
+        $tagName = 'TECHOPENCAST';
+        
+        // TODO review: check locale, check defintion of congresses
+        // $series = $seriesRepo->findBy(array('keyword.en' => 'congress'), array('public_date' => 'desc'));
+        return $this->actionOpencast("Recorded lectures", $tagName, "pumukitcmarwebtv_library_lectures");
     }
-
 
     /**
      * @Route("/all", name="pumukitcmarwebtv_library_all")
@@ -118,11 +110,12 @@ class MediaLibraryController extends Controller
      */
     public function allAction(Request $request)
     {
-        $title = "All Videos";
+        $title = $this->get('translator')->trans("All videos");
+        $this->get('pumukit_web_tv.breadcrumbs')->addList($title, "pumukitcmarwebtv_library_all");
 
         $seriesRepo = $this->get('doctrine_mongodb.odm.document_manager')->getRepository('PumukitSchemaBundle:Series');
 
-        //TODO revew
+        //TODO review
         $series = $seriesRepo->findBy(array(), array('public_date' => -1));
 
         return array('title' => $title, 'series' => $series);
@@ -131,17 +124,43 @@ class MediaLibraryController extends Controller
 
     private function action($title, $tagName, $routeName, Request $request, array $sort=array('public_date' => -1))
     {
-        $this->get('pumukit_web_tv.breadcrumbs')->addList($title, $routeName);
-
         $dm = $this->get('doctrine_mongodb.odm.document_manager');
 
         $tag = $dm->getRepository('PumukitSchemaBundle:Tag')->findOneByCod($tagName);
         if (!$tag) {
           throw $this->createNotFoundException('The tag does not exist');
         }
+    
+        $title = $title != null ? $title : $tag->getTitle();
+        
+        $this->get('pumukit_web_tv.breadcrumbs')->addList($title, $routeName);
 
         $series = $dm->getRepository('PumukitSchemaBundle:Series')->findWithTag($tag, $sort);
 
         return array('title' => $title, 'series' => $series, 'tag_cod' => $tagName);
+    }
+
+    private function actionOpencast($title, $tagName, $routeName, array $sort=array('public_date' => -1))
+    {
+        $dm = $this->get('doctrine_mongodb.odm.document_manager');
+
+        $tag = $dm->getRepository('PumukitSchemaBundle:Tag')->findOneByCod($tagName);
+        if (!$tag) {
+            throw $this->createNotFoundException('The tag does not exist');
+        }
+
+        $title = $title != null ? $title : $tag->getTitle();
+
+        $this->get('pumukit_web_tv.breadcrumbs')->addList($title, $routeName, array(), true);
+
+        // NOTE: Review if the number of SeriesType increases
+        $allSeriesType = $dm->getRepository('PumukitSchemaBundle:SeriesType')->findAll();
+        $subseries = array();
+        foreach ($allSeriesType as $seriesType) {
+            $series = $dm->getRepository('PumukitSchemaBundle:Series')->findWithTagAndSeriesType($tag, $seriesType, $sort);
+            $subseries[$seriesType->getName()] = $series;
+        }
+
+        return array('title' => $title, 'subseries' => $subseries, 'tag_cod' => $tagName);
     }
 }

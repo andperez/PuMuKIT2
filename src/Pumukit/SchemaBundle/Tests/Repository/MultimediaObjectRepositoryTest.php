@@ -22,6 +22,7 @@ class MultimediaObjectRepositoryTest extends WebTestCase
     private $qb;
     private $factoryService;
     private $mmsPicService;
+    private $tagService;
 
     public function __construct()
     {
@@ -36,6 +37,8 @@ class MultimediaObjectRepositoryTest extends WebTestCase
             ->get('pumukitschema.factory');
         $this->mmsPicService = $kernel->getContainer()
             ->get('pumukitschema.mmspic');
+        $this->tagService = $kernel->getContainer()
+            ->get('pumukitschema.tag');
     }
 
     public function setUp()
@@ -157,22 +160,20 @@ class MultimediaObjectRepositoryTest extends WebTestCase
         $this->assertEquals(2, count($mmobj_ned_lord));
         $this->assertEquals(1, count($mmobj_ned_hand));
 
-        // TODO - FAILS #6100
-        //$this->assertEquals(0, count($mmobj_benjen_lord));
-        //$this->assertEquals(0, count($mmobj_ned_ranger));
+        $this->assertEquals(0, count($mmobj_benjen_lord));
+        $this->assertEquals(0, count($mmobj_ned_ranger));
         $this->assertEquals(0, count($mmobj_benjen_hand));
 
         $seriesBenjen = $this->repo->findSeriesFieldByPersonId($person_benjen->getId());
         $seriesNed = $this->repo->findSeriesFieldByPersonId($person_ned->getId());
 
         $this->assertEquals(2, count($seriesBenjen));
-        $this->assertEquals($series_wall->getId(), $seriesBenjen->toArray()[0]);
-        $this->assertEquals($series_main->getId(), $seriesBenjen->toArray()[1]);
+        $this->assertTrue(in_array($series_wall->getId(), $seriesBenjen->toArray()));
+        $this->assertTrue(in_array($series_main->getId(), $seriesBenjen->toArray()));
 
         $this->assertEquals(2, count($seriesNed));
-        $this->assertEquals($series_main->getId(), $seriesNed->toArray()[0]);
-        $this->assertEquals($series_lhazar->getId(), $seriesNed->toArray()[1]);
-
+        $this->assertTrue(in_array($series_main->getId(), $seriesNed->toArray()));
+        $this->assertTrue(in_array($series_lhazar->getId(), $seriesNed->toArray()));
     }
 
     public function testPeopleInMultimediaObjectCollection()
@@ -1217,6 +1218,61 @@ class MultimediaObjectRepositoryTest extends WebTestCase
         $this->assertEquals($arrayMms, array_values($this->repo->findOrderedBy($series, $sortRecDateAsc)->toArray()));
         $arrayMms = array($mm2, $mm1, $mm3);
         $this->assertEquals($arrayMms, array_values($this->repo->findOrderedBy($series, $sortRecDateDesc)->toArray()));
+    }
+
+    public function testEmbeddedTagChildOfTag()
+    {
+        $tag1 = new Tag();
+        $tag1->setCod('tag1');
+        $tag2 = new Tag();
+        $tag2->setCod('tag2');
+        $tag3 = new Tag();
+        $tag3->setCod('tag3');
+
+        $tag2->setParent($tag1);
+        $tag3->setParent($tag2);
+
+        $tag4 = new Tag();
+        $tag4->setCod('tag4');
+
+        $this->dm->persist($tag1);
+        $this->dm->persist($tag2);
+        $this->dm->persist($tag3);
+        $this->dm->persist($tag4);
+        $this->dm->flush();
+
+        $this->assertTrue($tag3->isChildOf($tag2));
+        $this->assertFalse($tag3->isChildOf($tag1));
+        $this->assertFalse($tag3->isChildOf($tag4));
+
+        $this->assertTrue($tag2->isChildOf($tag1));
+        $this->assertFalse($tag1->isChildOf($tag2));
+
+        $broadcast = $this->createBroadcast(Broadcast::BROADCAST_TYPE_PRI);
+        $series = $this->createSeries('Series');
+        $multimediaObject = $this->factoryService->createMultimediaObject($series);
+        $tagAdded = $this->tagService->addTagToMultimediaObject($multimediaObject, $tag3->getId());
+
+        $embeddedTags = $multimediaObject->getTags();
+        $embeddedTag1 = $embeddedTags[2];
+        $embeddedTag2 = $embeddedTags[1];
+        $embeddedTag3 = $embeddedTags[0];
+
+        $this->assertTrue($embeddedTag3->isChildOf($tag2));
+        $this->assertTrue($embeddedTag2->isChildOf($tag1));
+
+        $this->assertTrue($embeddedTag3->isChildOf($embeddedTag2));
+        $this->assertTrue($embeddedTag2->isChildOf($embeddedTag1));
+
+        $this->assertFalse($embeddedTag3->isChildOf($tag1));
+        $this->assertFalse($embeddedTag3->isChildOf($embeddedTag1));
+
+        $this->assertFalse($tag1->isChildOf($embeddedTag3));
+        $this->assertFalse($embeddedTag1->isChildOf($embeddedTag3));
+
+        $this->assertFalse($embeddedTag1->isChildOf($tag4));
+        $this->assertFalse($embeddedTag2->isChildOf($tag4));
+        $this->assertFalse($embeddedTag3->isChildOf($tag4));
     }
 
     private function createPerson($name)

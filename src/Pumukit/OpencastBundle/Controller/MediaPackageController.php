@@ -47,13 +47,22 @@ class MediaPackageController extends Controller
                 $limit,
                 ($page -1) * $limit);
 
+        $currentPageOpencastIds = array();
+        foreach ($mediaPackages as $mediaPackage) {
+            $currentPageOpencastIds[] = $mediaPackage["id"];
+        }
+
         $adapter = new FixedAdapter($total, $mediaPackages);
         $pagerfanta = new Pagerfanta($adapter);
 
         $pagerfanta->setMaxPerPage($limit);
         $pagerfanta->setCurrentPage($page);
 
-        $repo = $repository_multimediaobjects->findall();
+        $repo = $repository_multimediaobjects->createQueryBuilder()
+          ->field("properties.opencast")->exists(true)
+          ->field("properties.opencast")->in($currentPageOpencastIds)
+          ->getQuery()
+          ->execute();
 
         return array('mediaPackages' => $pagerfanta, 'multimediaObjects' => $repo, 'player' => $opencastClient->getPlayerUrl());
     }
@@ -73,7 +82,7 @@ class MediaPackageController extends Controller
         $series = $repository_series->findOneBy(array("title.en" => "MediaPackages without series"));
 
         if(isset($mediaPackage["series"])){
-            $oneseries = $repository_series->findOneBy(array("properties.opencast" => $mediaPackage["series"]));    
+            $oneseries = $repository_series->findOneBy(array("properties.opencast" => $mediaPackage["series"]));
         }
         $repository_multimediaobjects = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
         $onemultimediaobjects = $repository_multimediaobjects->findOneBy(array("properties.opencast" => $mediaPackage["id"]));
@@ -101,7 +110,7 @@ class MediaPackageController extends Controller
                 $title = $mediaPackage["seriestitle"];
                 $properties = $mediaPackage["series"];
             }
-  
+
             $series = $factoryService->createSeries();
             $series->setAnnounce($announce);
             $series->setPublicDate($publicDate);
@@ -153,12 +162,12 @@ class MediaPackageController extends Controller
         }
 
         if($onemultimediaobjects == null){
-            
+
             $rank = 3;
             $status = MultimediaObject::STATUS_PUBLISHED;
             $title = $mediaPackage["title"];
             $properties = $mediaPackage["id"];
- 
+
             if($oneseries != "WITHOUT_SERIES"){
                 $series = $repository_series->findOneBy(array("properties.opencast" => $mediaPackage["series"]));
             }
@@ -177,16 +186,29 @@ class MediaPackageController extends Controller
                 $url = $mediaPackage["media"]["track"][$i]["url"];
                 $mime = $mediaPackage["media"]["track"][$i]["mimetype"];
                 $duration = $mediaPackage["media"]["track"][$i]["duration"];
-                $acodec = $mediaPackage["media"]["track"][$i]["audio"]["encoder"]["type"];
-                $vcodec = $mediaPackage["media"]["track"][$i]["video"]["encoder"]["type"];
-         
+
                 $track = new Track();
-                $track->setTags(array("opencast"));
+
+                if( isset($mediapackage["media"]["track"][$i]["audio"])) {
+                    $acodec = $mediaPackage["media"]["track"][$i]["audio"]["encoder"]["type"];
+                    $track->setAcodec($acodec);
+                }
+
+                if( isset($mediaPackage["media"]["track"][$i]["video"])) {
+                    $vcodec = $mediaPackage["media"]["track"][$i]["video"]["encoder"]["type"];
+                    $track->setVcodec($vcodec);
+                }
+
+                if (!$track->getVcodec() && $track->getAcodec()) {
+                    $track->setOnlyAudio(true);
+                }
+
+                $track->addTag("opencast");
+                $track->addTag($mediaPackage["media"]["track"][$i]["type"]);
                 $track->setUrl($url);
+                $track->setPath($this->get('pumukit_opencast.job')->getPath($url));
                 $track->setMimeType($mime);
                 $track->setDuration($duration);
-                $track->setAcodec($acodec);
-                $track->setVcodec($vcodec);
 
                 $multimediaObject->addTrack($track);
             }
@@ -208,8 +230,19 @@ class MediaPackageController extends Controller
             }
 
             $dm = $this->get('doctrine_mongodb')->getManager();
+            $tagRepo = $dm->getRepository('PumukitSchemaBundle:Tag');
+            $opencastTag = $tagRepo->findOneByCod('TECHOPENCAST');
+            if ($opencastTag) {
+                $tagService = $this->get('pumukitschema.tag');
+                $tagAdded = $tagService->addTagToMultimediaObject($multimediaObject, $opencastTag->getId());
+            }
             $dm->persist($multimediaObject);
             $dm->flush();
+
+            if($track) {
+                $this->get('pumukit_opencast.job')->genSbs($multimediaObject);
+            }
+
         }
 
         return $this->redirect($this->getRequest()->headers->get('referer'));

@@ -8,10 +8,10 @@
     {% block stylesheets %}
     <link href="{{ asset('bundles/pumukitcmarwebtv/css/960.css') }}" type="text/css" rel="stylesheet" media="screen"/>
     <link href="{{ asset('bundles/pumukitcmarwebtv/css/iefix.css') }}" type="text/css" rel="stylesheet" media="screen"/>
-    <link href="{{ asset('bundles/pumukitcmarwebtv/css/matterhorn.css') }}" type="text/css" rel="stylesheet" media="screen"/>
-    <link href="{{ asset('bundles/pumukitcmarwebtv/css/serial.css') }}" type="text/css" rel="stylesheet" media="screen"/>
+    <link href="{{ path('pumukitcmarwebtv_opencast_css') }}" rel="stylesheet">
+    <link href="{{ path('pumukitcmarwebtv_series_css') }}" rel="stylesheet">
+    <link href="{{ path('pumukitcmarwebtv_style_css') }}" rel="stylesheet">
     <link href="{{ asset('bundles/pumukitcmarwebtv/css/pumukittv.css') }}" type="text/css" rel="stylesheet" media="screen"/>
-    <link href="{{ asset('bundles/pumukitcmarwebtv/css/estilos.css') }}" type="text/css" rel="stylesheet" media="screen"/>
     {% endblock %}
     {% block javascripts %}
     <script type="text/javascript" src="{{ asset('bundles/pumukitcmarwebtv/js/prototype.js') }}"></script>
@@ -20,13 +20,7 @@
   </head>
   <body>
     {% block body_base %}
-    <div id="headerbar">
-      <div style="overflow:hidden; background:#005268 url({{ asset('bundles/pumukitcmarwebtv/images/usc/cmartvL.jpg') }}) no-repeat 50% 50%">
-        <div class="container_15">
-          {% include 'PumukitCmarWebTVBundle::header.html.twig' %}
-        </div>
-      </div>
-    </div>  
+    {% include 'PumukitCmarWebTVBundle::header.html.twig' %}
     <div id="body">
       <div class="container_15" id="tvusc">
         <div class="usctv_cab">

@@ -32,11 +32,20 @@ class Broadcast
   private $multimedia_objects;
 
   /**
+   * @var int $number_multimedia_objects
+   *
+   * @MongoDB\Int
+   * @MongoDB\Increment
+   */
+  private $number_multimedia_objects = 0;
+
+  /**
    * @var string $name
    *
-   * @MongoDB\Raw
+   * @MongoDB\String
+   * @MongoDB\UniqueIndex(safe=1)
    */
-  private $name = array('en' => '');
+  private $name;
 
   /**
    * @var string $broadcast_type_id
@@ -112,53 +121,53 @@ class Broadcast
   }
 
   /**
+   * Increase number_multimedia_objects
+   */
+  public function increaseNumberMultimediaObjects()
+  {
+      ++$this->number_multimedia_objects;
+  }
+
+  /**
+   * Decrease number_multimedia_objects
+   */
+  public function decreaseNumberMultimediaObjects()
+  {
+      --$this->number_multimedia_objects;
+  }
+
+  /**
+   * Get number_multimedia_objects
+   */
+  public function getNumberMultimediaObjects()
+  {
+      return $this->number_multimedia_objects;
+  }
+
+  /**
+   * Set number_multimedia_objects
+   */
+  public function setNumberMultimediaObjects($count)
+  {
+      return $this->number_multimedia_objects = $count;
+  }
+
+  /**
    * Set name
    *
    * @param string $name
-   * @param string|null $locale
    */
-  public function setName($name, $locale = null)
-  {
-      if ($locale == null) {
-          $locale = $this->locale;
-      }
-      $this->name[$locale] = $name;
-  }
-
-  /**
-   * Get name
-   *
-   * @param string|null $locale
-   * @return string
-   */
-  public function getName($locale = null)
-  {
-      if ($locale == null) {
-          $locale = $this->locale;
-      }
-      if (!isset($this->name[$locale])) {
-          return;
-      }
-
-      return $this->name[$locale];
-  }
-
-  /**
-   * Set I18n name
-   *
-   * @param array $name
-   */
-  public function setI18nName(array $name)
+  public function setName($name)
   {
       $this->name = $name;
   }
 
   /**
-   * Get i18n name
+   * Get name
    *
-   * @return array
+   * @return string
    */
-  public function getI18nName()
+  public function getName()
   {
       return $this->name;
   }

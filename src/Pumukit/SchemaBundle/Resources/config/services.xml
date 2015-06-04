@@ -12,6 +12,7 @@
             <argument type="service" id="request_stack" />
             <argument>%kernel.default_locale%</argument>
             <tag name="doctrine_mongodb.odm.event_listener" event="postLoad" />
+            <tag name="kernel.event_subscriber" />
         </service>
 
         <service id="pumukitschema.schema.remove" class="Pumukit\SchemaBundle\Listener\RemoveListener">
@@ -63,6 +64,9 @@
             <argument type="service" id="doctrine_mongodb.odm.document_manager"/>
         </service>
 
+        <service id="pumukitschema.announce" class="Pumukit\SchemaBundle\Services\AnnounceService">
+            <argument type="service" id="doctrine_mongodb.odm.document_manager"/>
+        </service>
     </services>
 
 </container>

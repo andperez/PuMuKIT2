@@ -8,23 +8,23 @@
   	  <ul>
   		<!-- Media library -->
       	<li>
-          <a href="{{ url('pumukit_webtv_medialibrary_index') }}">{% trans %}Media library{% endtrans %}</a>
+          <a href="{{ path('pumukitcmarwebtv_library_all') }}">{% trans %}Media library{% endtrans %}</a>
       	</li>
       	<!-- Congresses -->
       	<li>
-          <a href="{{ url('pumukit_webtv_medialibrary_index') }}">{% trans %}Congresses{% endtrans %}</a>
+          <a href="{{ path('pumukitcmarwebtv_library_congresses') }}">{% trans %}Congresses{% endtrans %}</a>
       	</li>
       	<!-- Live -->
       	<li>
-          <a href="#{# TODO /live #}">{% trans %}Live{% endtrans %}</a>
+          <a href="{{ path('pumukit_live') }}">{% trans %}Live{% endtrans %}</a>
       	</li>
       	<!-- Press area -->
       	<li>
-          <a href="{{ url('pumukit_webtv_medialibrary_index') }}">{% trans %}Press area{% endtrans %}</a>
+          <a href="{{ path('pumukitcmarwebtv_library_pressarea') }}">{% trans %}Press area{% endtrans %}</a>
       	</li>
       	<!-- Recorded lectures -->
       	<li>
-          <a href="#{# TODO /librarymh #}">{% trans %}Recorded lectures{% endtrans %}</a>
+          <a href="{{ path('pumukitcmarwebtv_library_lectures') }}">{% trans %}Recorded lectures{% endtrans %}</a>
       	</li>
   	  </ul>
   	</div>

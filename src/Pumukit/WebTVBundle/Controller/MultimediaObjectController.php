@@ -21,10 +21,9 @@ class MultimediaObjectController extends Controller
      */
     public function indexAction(MultimediaObject $multimediaObject, Request $request)
     {
-      //TODO refact.
-      if($opencasturl = $multimediaObject->getProperty("opencasturl")) {
-          $this->incNumView($multimediaObject, $track);
-          $this->redirect($opencasturl);
+      $response = $this->preExecute($multimediaObject);
+      if($response instanceof Response) {
+        return $response;
       }
     
       $track = $request->query->has('track_id') ?
@@ -65,6 +64,11 @@ class MultimediaObjectController extends Controller
      */
     public function magicIndexAction(MultimediaObject $multimediaObject, Request $request)
     {
+      $response = $this->preExecute($multimediaObject);
+      if($response instanceof Response) {
+        return $response;
+      }
+
       $track = $request->query->has('track_id') ?
         $multimediaObject->getTrackById($request->query->get('track_id')) :
         $multimediaObject->getTrackWithTag('display');
@@ -106,7 +110,7 @@ class MultimediaObjectController extends Controller
 
 
 
-    private function getIntro($queryIntro=false)
+    protected function getIntro($queryIntro=false)
     {
       $hasIntro = $this->container->hasParameter('pumukit2.intro');
       
@@ -121,7 +125,7 @@ class MultimediaObjectController extends Controller
       return $intro;
     }
 
-    private function incNumView(MultimediaObject $multimediaObject, Track $track=null)
+    protected function incNumView(MultimediaObject $multimediaObject, Track $track=null)
     {
       $dm = $this->get('doctrine_mongodb.odm.document_manager');
       $multimediaObject->incNumview();
@@ -131,9 +135,19 @@ class MultimediaObjectController extends Controller
     }
 
 
-    private function updateBreadcrumbs(MultimediaObject $multimediaObject)
+    protected function updateBreadcrumbs(MultimediaObject $multimediaObject)
     {
       $breadcrumbs = $this->get('pumukit_web_tv.breadcrumbs');
       $breadcrumbs->addMultimediaObject($multimediaObject);
+    }
+
+
+    public function preExecute(MultimediaObject $multimediaObject)
+    {
+
+      if($opencasturl = $multimediaObject->getProperty("opencasturl")) {
+          $this->incNumView($multimediaObject);
+          return $this->redirect($opencasturl);
+      }
     }
 }

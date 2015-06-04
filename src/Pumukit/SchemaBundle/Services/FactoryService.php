@@ -82,6 +82,8 @@ class FactoryService
 
         $mm->setSeries($series);
 
+        $this->dm->persist($broadcast);
+
         return $mm;
     }
 
@@ -111,6 +113,7 @@ class FactoryService
 
         $mm->setSeries($series);
 
+        $this->dm->persist($broadcast);
         $this->dm->persist($mm);
         $this->dm->persist($series);
         $this->dm->flush();
@@ -271,7 +274,7 @@ class FactoryService
         $new->setNumview($prototype->getNumview());
 
         foreach ($prototype->getTags() as $tag) {
-            $tagAdded = $this->tagService->addTagToMultimediaObject($new, $tag->getId());
+          $tagAdded = $this->tagService->addTagToMultimediaObject($new, $tag->getId(), false);
         }
 
         foreach ($prototype->getRoles() as $embeddedRole) {
