@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 
+
 class IndexController extends Controller
 {
 
@@ -159,12 +160,12 @@ class IndexController extends Controller
     /*
      * Modifica el objeto criteria de entrada añadiendo filtros de fechas (until & from) y de set si están definidos en la URI
      */
-    protected function filter($request){
-
+    protected function filter($request)
+    {
         $repository_multimediaObjects = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
         $repository_series = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:Series');
         
-        $queryBuilder_multimediaObjects = $repository_multimediaObjects->createStandardQueryBuilder();
+        $queryBuilder_multimediaObjects = $repository_multimediaObjects->createStandardQueryBuilder();//->limit(10)->skip(10*$pag);
         $queryBuilder_series = $repository_series->createQueryBuilder();
 
         if($request->query->get('from')){
@@ -192,9 +193,13 @@ class IndexController extends Controller
     /*
      * Valida si el token pasado en resumptionToken es correcto
      */
-    protected function validateToken($resumptionToken){
+    protected function validateToken($resumptionToken)
+    {
+        if($resumptionToken == null) return false;
 
-        //var_dump($resumptionToken);
+        $resumptionToken = explode('%', $resumptionToken);
+        
+        if((count($resumptionToken) != 5)) return true;
 
         return false;
     }

@@ -13,7 +13,7 @@
       <dc:identifier xsi:type="dcterms:URI" id="uid"></dc:identifier>
       {% for track in multimediaObject.getTracks %}
         <dc:type><![CDATA[{{ track.getMimeType() }}]]></dc:type>
-        <dc:format><![CDATA[{{ track.getFormat() }}]]></dc:format>
+        <dc:format></dc:format>
       {% endfor %}
       {% for tag in multimediaObject.getTags() %}
         <dc:subject><![CDATA[{{tag.getTitle()}}]]></dc:subject>
