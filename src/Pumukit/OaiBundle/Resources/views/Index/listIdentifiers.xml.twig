@@ -10,6 +10,6 @@
     {% for multimediaObject in multimediaObjects %}
       {% include 'PumukitOaiBundle:Index:header.xml.twig' with {'multimediaObject': multimediaObject} %}
     {% endfor %}
-    <resumptionToken expirationDate="2002-06-01T23:20:00Z" completeListSize="" cursor="">2%{{set}}%{{from}}%{{until}}%oai_dc</resumptionToken>
+    <resumptionToken expirationDate="2002-06-01T23:20:00Z" completeListSize="{{multimediaObjects|length}}" cursor=""></resumptionToken>
   </ListIdentifiers>
 </OAI-PMH>
