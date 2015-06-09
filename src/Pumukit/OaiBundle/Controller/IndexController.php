@@ -33,7 +33,7 @@ class IndexController extends Controller
             case 'ListMetadataFormats':
                 return $this->forward('PumukitOaiBundle:Index:listMetadataFormats', array("request" => $request));
             case 'ListSets':
-                return $this->forward('PumukitOaiBundle:Index:listSets');
+                return $this->forward('PumukitOaiBundle:Index:listSets', array("request" => $request));
             default:
                 return $this->error('badVerb', 'Illegal OAI verb');
         }
@@ -155,12 +155,25 @@ class IndexController extends Controller
     /*
      * Genera la salida de listSets
      */
-    public function listSetsAction()
+    public function listSetsAction($request)
     {
-        $allSeries = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:Series');
-        $allSeries = $allSeries->findAll();
+        $pag = 2;
+        $resumptionToken = $request->query->get('resumptionToken');
 
-        return $this->render('PumukitOaiBundle:Index:listSets.xml.twig', array('allSeries' => $allSeries));
+        $token = $this->validateToken($resumptionToken);
+        if($token['error'] == true){
+            return $this->error('badResumptionToken', 'The value of the resumptionToken argument is invalid or expired');
+        }
+
+        if($token['pag'] != null){
+            $pag = $token['pag'];
+        }
+
+        $allSeries = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:Series');
+        $allSeries = $allSeries->createQueryBuilder()->limit(10)->skip(10*($pag-2));
+        $allSeries = $allSeries->getQuery()->execute();
+
+        return $this->render('PumukitOaiBundle:Index:listSets.xml.twig', array('allSeries' => $allSeries, 'pag' => $pag));
     }
 
     /*

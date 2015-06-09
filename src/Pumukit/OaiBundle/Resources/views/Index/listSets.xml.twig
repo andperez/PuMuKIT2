@@ -13,5 +13,6 @@
         <setName><![CDATA[{{series.getTitle()}}]]></setName>
       </set> 
     {% endfor %}
+    <resumptionToken expirationDate="2002-06-01T23:20:00Z" completeListSize="{{allSeries|length}}" cursor="0">{{pag}}</resumptionToken>
   </ListSets>
 </OAI-PMH>
