@@ -107,6 +107,7 @@ class IndexController extends Controller
      */
     public function listRecordsAction($request)
     {
+        $pag = 2;
         $from = $request->query->get('from');
         $until = $request->query->get('until');
         $set = $request->query->get('set');
@@ -116,14 +117,23 @@ class IndexController extends Controller
             return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
         }
 
-        $mmObjColl = $this->filter($request);
+        $token = $this->validateToken($resumptionToken);
+        if($token['error'] == true){
+            return $this->error('badResumptionToken', 'The value of the resumptionToken argument is invalid or expired');
+        }
+
+        if($token['pag'] != null){
+            $pag = $token['pag'];
+        }
+
+        $mmObjColl = $this->filter($request, $pag);
 
         if(count($mmObjColl) == 0){
             return $this->error('noRecordsMatch', 'The combination of the values of the from, until, and set arguments results in an empty list');
         }
 
         return $this->render('PumukitOaiBundle:Index:listRecords.xml.twig', 
-            array('multimediaObjects' => $mmObjColl, 'from' => $from, 'until' => $until, 'set' => $set));
+            array('multimediaObjects' => $mmObjColl, 'from' => $from, 'until' => $until, 'set' => $set, 'pag' => $pag));
     }
 
     /*
