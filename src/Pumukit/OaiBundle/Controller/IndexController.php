@@ -73,6 +73,7 @@ class IndexController extends Controller
      */
     public function listIdentifiersAction($request)
     {
+        $pag = 2;
         $from = $request->query->get('from');
         $until = $request->query->get('until');
         $set = $request->query->get('set');
@@ -82,18 +83,23 @@ class IndexController extends Controller
             return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
         }
 
-        $mmObjColl = $this->filter($request);
+        $token = $this->validateToken($resumptionToken);
+        if($token['error'] == true){
+            return $this->error('badResumptionToken', 'The value of the resumptionToken argument is invalid or expired');
+        }
+
+        if($token['pag'] != null){
+            $pag = $token['pag'];
+        }
+
+        $mmObjColl = $this->filter($request, $pag);
 
         if(count($mmObjColl) == 0){
             return $this->error('noRecordsMatch', 'The combination of the values of the from, until, and set arguments results in an empty list');
         }
 
-        if($this->validateToken($resumptionToken)){
-            return $this->error('badResumptionToken', 'The value of the resumptionToken argument is invalid or expired');
-        }
-
         return $this->render('PumukitOaiBundle:Index:listIdentifiers.xml.twig', 
-            array('multimediaObjects' => $mmObjColl, 'from' => $from, 'until' => $until, 'set' => $set));
+            array('multimediaObjects' => $mmObjColl, 'from' => $from, 'until' => $until, 'set' => $set, 'pag' => $pag));
     }
 
     /*
@@ -160,12 +166,12 @@ class IndexController extends Controller
     /*
      * Modifica el objeto criteria de entrada añadiendo filtros de fechas (until & from) y de set si están definidos en la URI
      */
-    protected function filter($request)
+    protected function filter($request, $pag)
     {
         $repository_multimediaObjects = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
         $repository_series = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:Series');
         
-        $queryBuilder_multimediaObjects = $repository_multimediaObjects->createStandardQueryBuilder();//->limit(10)->skip(10*$pag);
+        $queryBuilder_multimediaObjects = $repository_multimediaObjects->createStandardQueryBuilder()->limit(10)->skip(10*($pag-2));
         $queryBuilder_series = $repository_series->createQueryBuilder();
 
         if($request->query->get('from')){
@@ -195,13 +201,10 @@ class IndexController extends Controller
      */
     protected function validateToken($resumptionToken)
     {
-        if($resumptionToken == null) return false;
-
-        $resumptionToken = explode('%', $resumptionToken);
-        
-        if((count($resumptionToken) != 5)) return true;
-
-        return false;
+        if($resumptionToken != null){
+            $error = false;
+            return array('pag' => (((int)$resumptionToken)+1), 'error' => $error);
+        }
     }
 }
 
