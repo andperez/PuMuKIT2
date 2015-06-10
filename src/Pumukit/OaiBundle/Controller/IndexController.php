@@ -181,6 +181,10 @@ class IndexController extends Controller
         $allSeries = $allSeries->createQueryBuilder()->limit(10)->skip(10*($pag-2));
         $allSeries = $allSeries->getQuery()->execute();
 
+        if((($resumptionToken > ceil(count($allSeries)/10)) or ($resumptionToken < 1)) and $resumptionToken != null){
+            return $this->error('badResumptionToken', 'The value of the resumptionToken argument is invalid or expired');
+        }
+
         if($pag >= ceil(count($allSeries)/10)) {
             $pag = ceil(count($allSeries)/10);
         }
