@@ -122,18 +122,22 @@ class IndexController extends Controller
         }
 
         $token = $this->validateToken($resumptionToken);
-        if($token['error'] == true){
-            return $this->error('badResumptionToken', 'The value of the resumptionToken argument is invalid or expired');
+        if($token['pag'] != null){
+            $pag = $token['pag'];
         }
 
         $mmObjColl = $this->filter($request, $pag);
 
-        if($pag >= ceil(count($mmObjColl)/10)) {
-            $pag = ceil(count($mmObjColl)/10);
-        }
-
         if(count($mmObjColl) == 0){
             return $this->error('noRecordsMatch', 'The combination of the values of the from, until, and set arguments results in an empty list');
+        }
+
+        if((($resumptionToken > ceil(count($mmObjColl)/10)) or ($resumptionToken < 1)) and $resumptionToken != null){
+            return $this->error('badResumptionToken', 'The value of the resumptionToken argument is invalid or expired');
+        }
+
+        if($pag >= ceil(count($mmObjColl)/10)) {
+            $pag = ceil(count($mmObjColl)/10);
         }
 
         return $this->render('PumukitOaiBundle:Index:listRecords.xml.twig', 
