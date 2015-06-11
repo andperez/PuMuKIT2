@@ -1,0 +1,6 @@
+<div id="chatDiv" class="chatContent">
+  {% for message in messages %}
+  <div class="chatTime {{ loop.index is odd ? 'chatOddRow' : 'chatEvenRow' }}">{{ message.insertDate|date('d-m-Y H:i') }}</div>
+  <div class="chatText {{ loop.index is odd ? 'chatOddRow' : 'chatEvenRow' }}"><b>{{ message.author }}:</b> {{ message.message }}</div>
+  {% endfor %}
+</div>
