@@ -27,9 +27,9 @@ class IndexController extends Controller
             case 'Identify':
                 return $this->forward('PumukitOaiBundle:Index:identify');
             case 'ListIdentifiers':
-                return $this->forward('PumukitOaiBundle:Index:listIdentifiers', array("request" => $request));
+                return $this->forward('PumukitOaiBundle:Index:list', array("request" => $request));
             case 'ListRecords':
-                return $this->forward('PumukitOaiBundle:Index:listRecords', array("request" => $request));
+                return $this->forward('PumukitOaiBundle:Index:list', array("request" => $request));
             case 'ListMetadataFormats':
                 return $this->forward('PumukitOaiBundle:Index:listMetadataFormats', array("request" => $request));
             case 'ListSets':
@@ -69,11 +69,12 @@ class IndexController extends Controller
     }
 
     /*
-     * Genera la salida de ListIdentifiers
+     * Genera la salida de ListIdentifiers o ListRecords
      */
-    public function listIdentifiersAction($request)
+    public function listAction($request)
     {
         $pag = 2;
+        $verb = $request->query->get('verb');
         $from = $request->query->get('from');
         $until = $request->query->get('until');
         $set = $request->query->get('set');
@@ -102,47 +103,16 @@ class IndexController extends Controller
             $pag = ceil(count($mmObjColl)/10);
         }
 
-        return $this->render('PumukitOaiBundle:Index:listIdentifiers.xml.twig', 
+        if($verb == "ListIdentifiers"){
+            return $this->render('PumukitOaiBundle:Index:listIdentifiers.xml.twig', 
             array('multimediaObjects' => $mmObjColl, 'from' => $from, 'until' => $until, 'set' => $set, 'pag' => $pag));
+        }
+        else{
+            return $this->render('PumukitOaiBundle:Index:listRecords.xml.twig', 
+            array('multimediaObjects' => $mmObjColl, 'from' => $from, 'until' => $until, 'set' => $set, 'pag' => $pag));
+        }
     }
 
-    /*
-     * Genera la salida de listRecords
-     */
-    public function listRecordsAction($request)
-    {
-        $pag = 2;
-        $from = $request->query->get('from');
-        $until = $request->query->get('until');
-        $set = $request->query->get('set');
-        $resumptionToken = $request->query->get('resumptionToken');
-
-        if($request->query->get('metadataPrefix', 'vacio') != 'oai_dc'){
-            return $this->error('cannotDisseminateFormat', 'cannotDisseminateFormat');
-        }
-
-        $token = $this->validateToken($resumptionToken);
-        if($token['pag'] != null){
-            $pag = $token['pag'];
-        }
-
-        $mmObjColl = $this->filter($request, $pag);
-
-        if(count($mmObjColl) == 0){
-            return $this->error('noRecordsMatch', 'The combination of the values of the from, until, and set arguments results in an empty list');
-        }
-
-        if((($resumptionToken > ceil(count($mmObjColl)/10)) or ($resumptionToken < 1)) and $resumptionToken != null){
-            return $this->error('badResumptionToken', 'The value of the resumptionToken argument is invalid or expired');
-        }
-
-        if($pag >= ceil(count($mmObjColl)/10)) {
-            $pag = ceil(count($mmObjColl)/10);
-        }
-
-        return $this->render('PumukitOaiBundle:Index:listRecords.xml.twig', 
-            array('multimediaObjects' => $mmObjColl, 'from' => $from, 'until' => $until, 'set' => $set, 'pag' => $pag));
-    }
 
     /*
      * Genera la salida de listMetadataFormats
