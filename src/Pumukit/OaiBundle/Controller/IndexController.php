@@ -4,6 +4,7 @@ namespace Pumukit\OaiBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 
@@ -65,7 +66,29 @@ class IndexController extends Controller
      */
     public function identifyAction()
     { 
-        return $this->render('PumukitOaiBundle:Index:identify.xml.twig');
+        //return $this->render('PumukitOaiBundle:Index:identify.xml.twig');
+
+        $XML = new \SimpleXMLElement("<OAI-PMH></OAI-PMH>");
+        $XML->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+        $XML->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+        $XML->addAttribute('xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+
+        $XMLresponseDate = $XML->addChild('responseDate', date("D M d, Y G:i"));
+        
+        $XMLrequest = $XML->addChild('request', $this->generateUrl('pumukit_oai_index'));
+        $XMLrequest->addAttribute('verb', 'Identify');
+
+        $XMLidentify = $XML->addChild('Identify');
+        $XMLidentify->addChild('repositoryName');
+        $XMLidentify->addChild('baseURL', $this->generateUrl('pumukit_oai_index'));
+        $XMLidentify->addChild('protocolVersion', '2.0');
+        $XMLidentify->addChild('adminEmail');
+        $XMLidentify->addChild('earliestDatestamp', '1990-02-01T12:00:00Z');
+        $XMLidentify->addChild('deletedRecord', 'no');
+        $XMLidentify->addChild('granularity', 'YYYY-MM-DDThh:mm:ssZ');
+
+        return new Response($XML->asXML(), 200, array('Content-Type' => 'text/xml'));
+
     }
 
     /*
