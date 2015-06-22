@@ -66,8 +66,6 @@ class IndexController extends Controller
      */
     public function identifyAction()
     { 
-        //return $this->render('PumukitOaiBundle:Index:identify.xml.twig');
-
         $XML = new \SimpleXMLElement("<OAI-PMH></OAI-PMH>");
         $XML->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
         $XML->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
@@ -88,7 +86,6 @@ class IndexController extends Controller
         $XMLidentify->addChild('granularity', 'YYYY-MM-DDThh:mm:ssZ');
 
         return new Response($XML->asXML(), 200, array('Content-Type' => 'text/xml'));
-
     }
 
     /*
