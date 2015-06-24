@@ -132,9 +132,12 @@ class IndexController extends Controller
         $XMLresponseDate = $XML->addChild('responseDate', date("D M d, Y G:i"));
 
         $XMLrequest = $XML->addChild('request', $this->generateUrl('pumukit_oai_index'));
+        $XMLrequest->addAttribute('metadataPrefix', 'oai_dc');
+        $XMLrequest->addAttribute('from', $from);
+        $XMLrequest->addAttribute('until', $until);
+        $XMLrequest->addAttribute('set', $set);
 
         if($verb == "ListIdentifiers"){
-
             $XMLrequest->addAttribute('verb', 'ListIdentifiers');
             $XMLlistIdentifiers = $XML->addChild('ListIdentifiers');
             foreach($mmObjColl as $object){
@@ -146,16 +149,59 @@ class IndexController extends Controller
                 $XMLsetSpec->addCDATA($object->getSeries()->getId());
             }
             $XMLresumptionToken = $XMLlistIdentifiers->addChild('resumptionToken', $pag);
-            $XMLresumptionToken->addAttribute('expirationDate', '2002-06-01T23:20:00Z');
-            $XMLresumptionToken->addAttribute('completeListSize', count($mmObjColl));
-            $XMLresumptionToken->addAttribute('cursor', '0');
-
-            return new Response($XML->asXML(), 200, array('Content-Type' => 'text/xml'));
         }
         else{
-            return $this->render('PumukitOaiBundle:Index:listRecords.xml.twig', 
-            array('multimediaObjects' => $mmObjColl, 'from' => $from, 'until' => $until, 'set' => $set, 'pag' => $pag));
+            $XMLrequest->addAttribute('verb', 'ListRecords');
+            $XMLlistRecords = $XML->addChild('ListRecords');
+            foreach($mmObjColl as $object){
+                $XMLheader = $XMLlistRecords->addChild('header');
+                $XMLidentifier = $XMLheader->addChild('identifier');
+                $XMLidentifier->addCDATA($object->getId());
+                $XMLheader->addChild('datestamp', $object->getPublicDate()->format('Y-m-d'));
+                $XMLsetSpec = $XMLheader->addChild('setSpec');
+                $XMLsetSpec->addCDATA($object->getSeries()->getId());
+
+                $XMLmetadata = $XMLlistRecords->addChild('metadata');
+                $XMLoai_dc = $XMLmetadata->addChild('oai_dc:dc');
+                $XMLoai_dc->addAttribute('xmlns:oai_dc', 'http://www.openarchives.org/OAI/2.0/oai_dc/');
+                $XMLoai_dc->addAttribute('xmlns:dc', 'http://purl.org/dc/elements/1.1/');
+                $XMLoai_dc->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+                $XMLoai_dc->addAttribute('xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd');
+
+                $XMLtitle = $XMLoai_dc->addChild('dc:title');
+                $XMLtitle->addCDATA($object->getTitle());
+                $XMLdescription = $XMLoai_dc->addChild('dc:description');
+                $XMLdescription->addCDATA($object->getDescription());
+                $XMLoai_dc->addChild('dc:date', $object->getPublicDate()->format('Y-m-d'));
+                $XMLiden = $XMLoai_dc->addChild('dc:identifier');
+                $XMLiden->addAttribute('xsi:type', 'dcterms:URI');
+                $XMLiden->addAttribute('id', 'uid');
+                foreach($object->getTracks() as $track){
+                    $XMLtype = $XMLoai_dc->addChild('dc:type');
+                    $XMLtype->addCDATA($track->getMimeType());
+                    $XMLoai_dc->addChild('dc:format');
+                }
+                foreach($object->getTags() as $tag){
+                    $XMLsubject = $XMLoai_dc->addChild('dc:subject');
+                    $XMLsubject->addCDATA($tag->getTitle());
+                }
+                $XMLcreator = $XMLoai_dc->addChild('dc:creator');
+                $XMLcreator->addCDATA('');
+                $XMLpublisher = $XMLoai_dc->addChild('dc:publisher');
+                $XMLpublisher->addCDATA('');
+                $XMLoai_dc->addChild('dc:language', $object->getLocale());
+                $XMLrights = $XMLoai_dc->addChild('dc:rights');
+                $XMLrights->addCDATA('');
+            }
+
+            $XMLresumptionToken = $XMLlistRecords->addChild('resumptionToken', $pag);
         }
+
+        $XMLresumptionToken->addAttribute('expirationDate', '2002-06-01T23:20:00Z');
+        $XMLresumptionToken->addAttribute('completeListSize', count($mmObjColl));
+        $XMLresumptionToken->addAttribute('cursor', '0');
+
+        return new Response($XML->asXML(), 200, array('Content-Type' => 'text/xml'));
     }
 
 
