@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use SimpleXMLElement;
 
 
 class IndexController extends Controller
@@ -123,9 +124,33 @@ class IndexController extends Controller
             $pag = ceil(count($mmObjColl)/10);
         }
 
+        $XML = new SimpleXMLExtended("<OAI-PMH></OAI-PMH>");
+        $XML->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+        $XML->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+        $XML->addAttribute('xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+
+        $XMLresponseDate = $XML->addChild('responseDate', date("D M d, Y G:i"));
+
+        $XMLrequest = $XML->addChild('request', $this->generateUrl('pumukit_oai_index'));
+
         if($verb == "ListIdentifiers"){
-            return $this->render('PumukitOaiBundle:Index:listIdentifiers.xml.twig', 
-            array('multimediaObjects' => $mmObjColl, 'from' => $from, 'until' => $until, 'set' => $set, 'pag' => $pag));
+
+            $XMLrequest->addAttribute('verb', 'ListIdentifiers');
+            $XMLlistIdentifiers = $XML->addChild('ListIdentifiers');
+            foreach($mmObjColl as $object){
+                $XMLheader = $XMLlistIdentifiers->addChild('header');
+                $XMLidentifier = $XMLheader->addChild('identifier');
+                $XMLidentifier->addCDATA($object->getId());
+                $XMLheader->addChild('datestamp', $object->getPublicDate()->format('Y-m-d'));
+                $XMLsetSpec = $XMLheader->addChild('setSpec');
+                $XMLsetSpec->addCDATA($object->getSeries()->getId());
+            }
+            $XMLresumptionToken = $XMLlistIdentifiers->addChild('resumptionToken', $pag);
+            $XMLresumptionToken->addAttribute('expirationDate', '2002-06-01T23:20:00Z');
+            $XMLresumptionToken->addAttribute('completeListSize', count($mmObjColl));
+            $XMLresumptionToken->addAttribute('cursor', '0');
+
+            return new Response($XML->asXML(), 200, array('Content-Type' => 'text/xml'));
         }
         else{
             return $this->render('PumukitOaiBundle:Index:listRecords.xml.twig', 
@@ -234,6 +259,19 @@ class IndexController extends Controller
             $error = false;
             return array('pag' => (((int)$resumptionToken)+1), 'error' => $error);
         }
+    }
+}
+
+
+/*
+ * Soperte para las etiquetas CDATA
+ */
+class SimpleXMLExtended extends SimpleXMLElement {
+    
+    public function addCDATA($cData){
+        $node = dom_import_simplexml($this);
+        $no = $node->ownerDocument;
+        $node->appendChild($no->createCDATASection($cData));
     }
 }
 
