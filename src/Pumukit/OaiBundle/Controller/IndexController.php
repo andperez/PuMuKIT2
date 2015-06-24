@@ -334,7 +334,17 @@ class IndexController extends Controller
     {
         $this->cod = $cod;
         $this->msg = $msg;
-        return $this->render('PumukitOaiBundle:Index:error.xml.twig', array('cod' => ($this->cod), 'msg' => ($this->msg)));
+        
+        $XML = new SimpleXMLExtended("<OAI-PMH></OAI-PMH>");
+        $XML->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+        $XML->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+        $XML->addAttribute('xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+        $XMLresponseDate = $XML->addChild('responseDate', date("D M d, Y G:i"));
+        $XMLrequest = $XML->addChild('request', $this->generateUrl('pumukit_oai_index'));
+        $XMLerror = $XML->addChild('error', $this->msg);
+        $XMLerror->addAttribute('code', $this->cod);
+
+        return new Response($XML->asXML(), 200, array('Content-Type' => 'text/xml'));        
     }
 
     /*
