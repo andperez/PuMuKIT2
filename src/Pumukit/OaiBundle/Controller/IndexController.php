@@ -54,12 +54,60 @@ class IndexController extends Controller
         $identifier = $request->query->get('identifier');
 
         $mmObjColl = $this->get('doctrine_mongodb')->getRepository('PumukitSchemaBundle:MultimediaObject');
-        $mmObj = $mmObjColl->find(array('id'  => $identifier));
+        $object = $mmObjColl->find(array('id'  => $identifier));
 
-        if ($mmObj == null)
+        if ($object == null)
             return $this->error('idDoesNotExist', 'The value of the identifier argument is unknown or illegal in this repository');
+        
+        $XML = new SimpleXMLExtended("<OAI-PMH></OAI-PMH>");
+        $XML->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+        $XML->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+        $XML->addAttribute('xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+        $XMLresponseDate = $XML->addChild('responseDate', date("D M d, Y G:i"));
+        $XMLrequest = $XML->addChild('request', $this->generateUrl('pumukit_oai_index'));
+        $XMLrequest->addAttribute('verb', 'GetRecord');
+        $XMLrequest->addAttribute('identifier', $identifier);
+        $XMLrequest->addAttribute('metadataPrefix', 'oai_dc');
+        $XMLgetRecord = $XML->addChild('GetRecord');
+        $XMLrecord = $XMLgetRecord->addChild('record');
+        $XMLheader = $XMLrecord->addChild('header');
+        $XMLidentifier = $XMLheader->addChild('identifier');
+        $XMLidentifier->addCDATA($object->getId());
+        $XMLheader->addChild('datestamp', $object->getPublicDate()->format('Y-m-d'));
+        $XMLsetSpec = $XMLheader->addChild('setSpec');
+        $XMLsetSpec->addCDATA($object->getSeries()->getId());
+        $XMLmetadata = $XMLrecord->addChild('metadata');
+        $XMLoai_dc = $XMLmetadata->addChild('oai_dc:dc');
+        $XMLoai_dc->addAttribute('xmlns:oai_dc', 'http://www.openarchives.org/OAI/2.0/oai_dc/');
+        $XMLoai_dc->addAttribute('xmlns:dc', 'http://purl.org/dc/elements/1.1/');
+        $XMLoai_dc->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+        $XMLoai_dc->addAttribute('xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd');
+        $XMLtitle = $XMLoai_dc->addChild('dc:title');
+        $XMLtitle->addCDATA($object->getTitle());
+        $XMLdescription = $XMLoai_dc->addChild('dc:description');
+        $XMLdescription->addCDATA($object->getDescription());
+        $XMLoai_dc->addChild('dc:date', $object->getPublicDate()->format('Y-m-d'));
+        $XMLiden = $XMLoai_dc->addChild('dc:identifier');
+        $XMLiden->addAttribute('xsi:type', 'dcterms:URI');
+        $XMLiden->addAttribute('id', 'uid');
+        foreach($object->getTracks() as $track){
+            $XMLtype = $XMLoai_dc->addChild('dc:type');
+            $XMLtype->addCDATA($track->getMimeType());
+            $XMLoai_dc->addChild('dc:format');
+        }
+        foreach($object->getTags() as $tag){
+            $XMLsubject = $XMLoai_dc->addChild('dc:subject');
+            $XMLsubject->addCDATA($tag->getTitle());
+        }
+        $XMLcreator = $XMLoai_dc->addChild('dc:creator');
+        $XMLcreator->addCDATA('');
+        $XMLpublisher = $XMLoai_dc->addChild('dc:publisher');
+        $XMLpublisher->addCDATA('');
+        $XMLoai_dc->addChild('dc:language', $object->getLocale());
+        $XMLrights = $XMLoai_dc->addChild('dc:rights');
+        $XMLrights->addCDATA('');
 
-        return $this->render('PumukitOaiBundle:Index:getRecord.xml.twig', array('multimediaObject' => $mmObj, 'identifier' => $identifier));
+        return new Response($XML->asXML(), 200, array('Content-Type' => 'text/xml'));
     }
 
     /*
@@ -67,7 +115,7 @@ class IndexController extends Controller
      */
     public function identifyAction()
     { 
-        $XML = new \SimpleXMLElement("<OAI-PMH></OAI-PMH>");
+        $XML = new SimpleXMLExtended("<OAI-PMH></OAI-PMH>");
         $XML->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
         $XML->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
         $XML->addAttribute('xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
@@ -148,13 +196,14 @@ class IndexController extends Controller
             $XMLrequest->addAttribute('verb', 'ListRecords');
             $XMLlistRecords = $XML->addChild('ListRecords');
             foreach($mmObjColl as $object){
-                $XMLheader = $XMLlistRecords->addChild('header');
+                $XMLrecord = $XMLlistRecords->addChild('record');
+                $XMLheader = $XMLrecord->addChild('header');
                 $XMLidentifier = $XMLheader->addChild('identifier');
                 $XMLidentifier->addCDATA($object->getId());
                 $XMLheader->addChild('datestamp', $object->getPublicDate()->format('Y-m-d'));
                 $XMLsetSpec = $XMLheader->addChild('setSpec');
                 $XMLsetSpec->addCDATA($object->getSeries()->getId());
-                $XMLmetadata = $XMLlistRecords->addChild('metadata');
+                $XMLmetadata = $XMLrecord->addChild('metadata');
                 $XMLoai_dc = $XMLmetadata->addChild('oai_dc:dc');
                 $XMLoai_dc->addAttribute('xmlns:oai_dc', 'http://www.openarchives.org/OAI/2.0/oai_dc/');
                 $XMLoai_dc->addAttribute('xmlns:dc', 'http://purl.org/dc/elements/1.1/');
