@@ -59,16 +59,13 @@ class IndexController extends Controller
         if ($object == null)
             return $this->error('idDoesNotExist', 'The value of the identifier argument is unknown or illegal in this repository');
         
-        $XML = new SimpleXMLExtended("<OAI-PMH></OAI-PMH>");
-        $XML->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
-        $XML->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-        $XML->addAttribute('xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
-        $XMLresponseDate = $XML->addChild('responseDate', date("D M d, Y G:i"));
-        $XMLrequest = $XML->addChild('request', $this->generateUrl('pumukit_oai_index'));
+        $request = "<request>" . $this->generateUrl('pumukit_oai_index') . "</request>";
+        $XMLrequest = new SimpleXMLExtended($request);
         $XMLrequest->addAttribute('verb', 'GetRecord');
         $XMLrequest->addAttribute('identifier', $identifier);
         $XMLrequest->addAttribute('metadataPrefix', 'oai_dc');
-        $XMLgetRecord = $XML->addChild('GetRecord');
+
+        $XMLgetRecord = new SimpleXMLExtended("<GetRecord></GetRecord>");
         $XMLrecord = $XMLgetRecord->addChild('record');
         $XMLheader = $XMLrecord->addChild('header');
         $XMLidentifier = $XMLheader->addChild('identifier');
@@ -107,7 +104,7 @@ class IndexController extends Controller
         $XMLrights = $XMLoai_dc->addChild('dc:rights');
         $XMLrights->addCDATA('');
 
-        return new Response($XML->asXML(), 200, array('Content-Type' => 'text/xml'));
+        return $XMLgetRecord->loadXMLVerb($XMLrequest,$XMLgetRecord);
     }
 
     /*
