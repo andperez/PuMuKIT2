@@ -299,14 +299,11 @@ class IndexController extends Controller
             $pag = ceil(count($allSeries)/10);
         }
 
-        $XML = new SimpleXMLExtended("<OAI-PMH></OAI-PMH>");
-        $XML->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
-        $XML->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-        $XML->addAttribute('xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
-        $XMLresponseDate = $XML->addChild('responseDate', date("D M d, Y G:i"));
-        $XMLrequest = $XML->addChild('request', $this->generateUrl('pumukit_oai_index'));
+        $request = "<request>" . $this->generateUrl('pumukit_oai_index') . "</request>";
+        $XMLrequest = new SimpleXMLExtended($request);
         $XMLrequest->addAttribute('verb', 'ListSets');
-        $XMLlistSets = $XML->addChild('ListSets');
+
+        $XMLlistSets = new SimpleXMLExtended("<ListSets></ListSets>");
         foreach($allSeries as $series){
             $XMLset = $XMLlistSets->addChild('set');
             $XMLsetSpec = $XMLset->addChild('setSpec');
@@ -319,7 +316,7 @@ class IndexController extends Controller
         $XMLresumptionToken->addAttribute('completeListSize', count($allSeries));
         $XMLresumptionToken->addAttribute('cursor', '0');
 
-        return new Response($XML->asXML(), 200, array('Content-Type' => 'text/xml'));
+        return $XMLlistSets->loadXMLVerb($XMLrequest,$XMLlistSets);
     }
 
     /*
@@ -330,16 +327,14 @@ class IndexController extends Controller
         $this->cod = $cod;
         $this->msg = $msg;
         
-        $XML = new SimpleXMLExtended("<OAI-PMH></OAI-PMH>");
-        $XML->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
-        $XML->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-        $XML->addAttribute('xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
-        $XMLresponseDate = $XML->addChild('responseDate', date("D M d, Y G:i"));
-        $XMLrequest = $XML->addChild('request', $this->generateUrl('pumukit_oai_index'));
-        $XMLerror = $XML->addChild('error', $this->msg);
+        $request = "<request>" . $this->generateUrl('pumukit_oai_index') . "</request>";
+        $XMLrequest = new SimpleXMLExtended($request);
+
+        $error = "<error>" . $this->msg . "</error>";
+        $XMLerror = new SimpleXMLExtended($error);
         $XMLerror->addAttribute('code', $this->cod);
 
-        return new Response($XML->asXML(), 200, array('Content-Type' => 'text/xml'));        
+        return $XMLerror->loadXMLVerb($XMLrequest,$XMLerror);        
     }
 
     /*
