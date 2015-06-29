@@ -115,14 +115,11 @@ class IndexController extends Controller
      */
     public function identifyAction()
     { 
-        $XML = new SimpleXMLExtended("<OAI-PMH></OAI-PMH>");
-        $XML->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
-        $XML->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-        $XML->addAttribute('xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
-        $XMLresponseDate = $XML->addChild('responseDate', date("D M d, Y G:i"));
-        $XMLrequest = $XML->addChild('request', $this->generateUrl('pumukit_oai_index'));
+        $request = "<request>" . $this->generateUrl('pumukit_oai_index') . "</request>";
+        $XMLrequest = new SimpleXMLExtended($request);
         $XMLrequest->addAttribute('verb', 'Identify');
-        $XMLidentify = $XML->addChild('Identify');
+
+        $XMLidentify = new SimpleXMLExtended("<Identify></Identify>");
         $XMLidentify->addChild('repositoryName');
         $XMLidentify->addChild('baseURL', $this->generateUrl('pumukit_oai_index'));
         $XMLidentify->addChild('protocolVersion', '2.0');
@@ -131,7 +128,7 @@ class IndexController extends Controller
         $XMLidentify->addChild('deletedRecord', 'no');
         $XMLidentify->addChild('granularity', 'YYYY-MM-DDThh:mm:ssZ');
 
-        return new Response($XML->asXML(), 200, array('Content-Type' => 'text/xml'));
+        return $XMLidentify->loadXMLVerb($XMLrequest,$XMLidentify);
     }
 
     /*
@@ -383,8 +380,7 @@ class IndexController extends Controller
     /*
      * Valida si el token pasado en resumptionToken es correcto
      */
-    protected function validateToken($resumptionToken)
-    {
+    protected function validateToken($resumptionToken){
         if($resumptionToken != null){
             $error = false;
             return array('pag' => (((int)$resumptionToken)+1), 'error' => $error);
@@ -402,6 +398,27 @@ class SimpleXMLExtended extends SimpleXMLElement {
         $node = dom_import_simplexml($this);
         $no = $node->ownerDocument;
         $node->appendChild($no->createCDATASection($cData));
+    }
+
+    public function loadXMLVerb($request, $verb){
+
+        $XML = new SimpleXMLExtended("<OAI-PMH></OAI-PMH>");
+        $XML->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+        $XML->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+        $XML->addAttribute('xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+        $XMLresponseDate = $XML->addChild('responseDate', date("D M d, Y G:i"));
+
+        $toDom = dom_import_simplexml($XML);
+        $fromDom = dom_import_simplexml($request);
+        $toDom->appendChild($toDom->ownerDocument->importNode($fromDom, true));
+        $XML = simplexml_import_dom($toDom);
+
+        $toDom = dom_import_simplexml($XML);
+        $fromDom = dom_import_simplexml($verb);
+        $toDom->appendChild($toDom->ownerDocument->importNode($fromDom, true));
+        $XML = simplexml_import_dom($toDom);
+
+        return new Response($XML->asXML(), 200, array('Content-Type' => 'text/xml'));
     }
 }
 
