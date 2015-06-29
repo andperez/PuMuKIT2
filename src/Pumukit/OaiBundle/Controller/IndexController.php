@@ -166,19 +166,15 @@ class IndexController extends Controller
             $pag = ceil(count($mmObjColl)/10);
         }
 
-        $XML = new SimpleXMLExtended("<OAI-PMH></OAI-PMH>");
-        $XML->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
-        $XML->addAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-        $XML->addAttribute('xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
-        $XMLresponseDate = $XML->addChild('responseDate', date("D M d, Y G:i"));
-        $XMLrequest = $XML->addChild('request', $this->generateUrl('pumukit_oai_index'));
+        $request = "<request>" . $this->generateUrl('pumukit_oai_index') . "</request>";
+        $XMLrequest = new SimpleXMLExtended($request);
         $XMLrequest->addAttribute('metadataPrefix', 'oai_dc');
         $XMLrequest->addAttribute('from', $from);
         $XMLrequest->addAttribute('until', $until);
         $XMLrequest->addAttribute('set', $set);
         if($verb == "ListIdentifiers"){
             $XMLrequest->addAttribute('verb', 'ListIdentifiers');
-            $XMLlistIdentifiers = $XML->addChild('ListIdentifiers');
+            $XMLlistIdentifiers = new SimpleXMLExtended("<ListIdentifiers></ListIdentifiers>");
             foreach($mmObjColl as $object){
                 $XMLheader = $XMLlistIdentifiers->addChild('header');
                 $XMLidentifier = $XMLheader->addChild('identifier');
@@ -188,10 +184,16 @@ class IndexController extends Controller
                 $XMLsetSpec->addCDATA($object->getSeries()->getId());
             }
             $XMLresumptionToken = $XMLlistIdentifiers->addChild('resumptionToken', $pag);
+            $XMLresumptionToken->addAttribute('expirationDate', '2002-06-01T23:20:00Z');
+            $XMLresumptionToken->addAttribute('completeListSize', count($mmObjColl));
+            $XMLresumptionToken->addAttribute('cursor', '0');
+
+            return $XMLlistIdentifiers->loadXMLVerb($XMLrequest,$XMLlistIdentifiers);
         }
+
         else{
             $XMLrequest->addAttribute('verb', 'ListRecords');
-            $XMLlistRecords = $XML->addChild('ListRecords');
+            $XMLlistRecords = new SimpleXMLExtended("<ListRecords></ListRecords>");
             foreach($mmObjColl as $object){
                 $XMLrecord = $XMLlistRecords->addChild('record');
                 $XMLheader = $XMLrecord->addChild('header');
@@ -232,12 +234,12 @@ class IndexController extends Controller
                 $XMLrights->addCDATA('');
             }
             $XMLresumptionToken = $XMLlistRecords->addChild('resumptionToken', $pag);
-        }
-        $XMLresumptionToken->addAttribute('expirationDate', '2002-06-01T23:20:00Z');
-        $XMLresumptionToken->addAttribute('completeListSize', count($mmObjColl));
-        $XMLresumptionToken->addAttribute('cursor', '0');
+            $XMLresumptionToken->addAttribute('expirationDate', '2002-06-01T23:20:00Z');
+            $XMLresumptionToken->addAttribute('completeListSize', count($mmObjColl));
+            $XMLresumptionToken->addAttribute('cursor', '0');
 
-        return new Response($XML->asXML(), 200, array('Content-Type' => 'text/xml'));
+            return $XMLlistRecords->loadXMLVerb($XMLrequest,$XMLlistRecords);
+        }
     }
 
 
@@ -389,9 +391,7 @@ class IndexController extends Controller
 }
 
 
-/*
- * Soperte para las etiquetas CDATA
- */
+
 class SimpleXMLExtended extends SimpleXMLElement {
     
     public function addCDATA($cData){
