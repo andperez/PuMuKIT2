@@ -4,10 +4,12 @@ namespace Pumukit\EncoderBundle\Services;
 
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\ProcessBuilder;
 use Symfony\Component\HttpKernel\Log\LoggerInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Pumukit\EncoderBundle\Document\Job;
@@ -32,10 +34,11 @@ class JobService
     private $dispatcher;
     private $logger;
     private $environment;
+    private $tokenStorage;
 
     public function __construct(DocumentManager $documentManager, ProfileService $profileService, CpuService $cpuService, 
-                                InspectionServiceInterface $inspectionService, EventDispatcherInterface $dispatcher, LoggerInterface $logger, 
-                                $environment="dev", $tmp_path=null)
+                                InspectionServiceInterface $inspectionService, EventDispatcherInterface $dispatcher, LoggerInterface $logger,
+                                TokenStorage $tokenStorage, $environment="dev", $tmp_path=null)
     {
         $this->dm = $documentManager;
         $this->repo = $this->dm->getRepository('PumukitEncoderBundle:Job');
@@ -44,6 +47,7 @@ class JobService
         $this->inspectionService = $inspectionService;
         $this->tmp_path = $tmp_path ? realpath($tmp_path) : sys_get_temp_dir();
         $this->logger = $logger;
+        $this->tokenStorage = $tokenStorage;
         $this->dispatcher = $dispatcher;
         $this->environment = $environment;
     }
@@ -91,7 +95,7 @@ class JobService
             $this->logger->addError('[addJob] InspectionService getDuration error message: '. $e->getMessage());
             throw new \Exception($e->getMessage());
         }
-        
+
         $job = new Job();
         $job->setMmId($multimediaObject->getId());
         $job->setProfile($profile);
@@ -104,6 +108,9 @@ class JobService
         }
         if (!empty($description)){
             $job->setI18nDescription($description);
+        }
+        if ($email = $this->getUserEmail()) {
+            $job->setEmail($email);
         }
         $job->setTimeini(new \DateTime('now'));
         $this->dm->persist($job);
@@ -188,6 +195,20 @@ class JobService
         $this->dm->flush();
     }
 
+    public function updateJobPriority($id, $priority)
+    {
+        $job = $this->repo->find($id);
+
+        if (null === $job){
+            $this->logger->addError('[updateJobPriority] Can not find job with id '.$id);
+            throw new \Exception("Can't find job with id ".$id);
+        }
+        
+        $job->setPriority($priority);
+        $this->dm->persist($job);
+        $this->dm->flush();
+    }
+    
     /**
      * Get all jobs status
      */
@@ -291,18 +312,7 @@ class JobService
         $cpu = $this->cpuService->getCpuByName($job->getCpu());
         $commandLine = $this->renderBat($job);
 
-        // TODO - Set pathEnd in some point
-        // TODO - Use Symfony\Component\Filesystem\Filesystem.
-        if (!realpath(dirname($job->getPathEnd())) && !file_exists(dirname($job->getPathEnd()))){
-            $created = @mkdir(dirname($job->getPathEnd()), 0777, true);
-            if ($created){
-                $this->logger->addInfo('[execute] Directory "'.dirname($job->getPathEnd()).'" from job path end "'.$job->getPathEnd().'" successfully created.');
-            }else{
-                $this->logger->addError('[execute] Could not create directory "'.dirname($job->getPathEnd()).'" from job path end "'.$job->getPathEnd().'"');
-            }
-        }else{
-            $this->logger->addWarning('[execute] Directory "'.dirname($job->getPathEnd()).'" already exists or permission denied to access the route.');
-        }
+        $this->mkdir(dirname($job->getPathEnd()));
         
         $executor = $this->getExecutor($profile['app'], $cpu);
         
@@ -448,17 +458,7 @@ class JobService
 
         $tempDir = $profile['streamserver']['dir_out'] . '/' . $dir;
 
-        //TODO repeat mkdir (see this->execute) and check error
-        if (!realpath($tempDir) && !file_exists($tempDir)){
-            $created = @mkdir($tempDir, 0777, true);
-            if ($created){
-                $this->logger->addInfo('[setPathEndAndExtensions] Directory "'.$tempDir.'" successfully created.');
-            }else{
-                $this->logger->addError('[setPathEndAndExtensions] Could not create directory: "'.$tempDir.'"');
-            }
-        }else{
-            $this->logger->addWarning('[setPathEndAndExtensions] Directory "'.$tempDir.'" already exists or permission denied to access the route.');
-        }
+        $this->mkdir($tempDir);
 
         return realpath($tempDir) . '/' . $file . '.' . $finalExtension;      
     }
@@ -556,17 +556,8 @@ class JobService
 
         $profile = $this->getProfile($job);
         $tempDir = $profile['streamserver']['dir_out'] . '/' . $mmobj->getSeries()->getId();
-        //TODO repeat mkdir (see this->execute) and check errors
-        if (!realpath($tempDir) && !file_exists($tempDir)){
-            $created = @mkdir($tempDir, 0777, true);
-            if ($created){
-                $this->logger->addInfo('[retryJob] Directory "'.$tempDir.'" successfully created.');
-            }else{
-                $this->logger->addError('[retryJob] Could not create directory: "'.$tempDir.'"');
-            }
-        }else{
-            $this->logger->addWarning('[retryJob] Directory "'.$tempDir.'" already exists or permission denied to access the route.');
-        }
+        
+        $this->mkdir($tempDir);
 
         $job->setStatus(Job::STATUS_WAITING);
         $job->setPriority(2);
@@ -629,7 +620,32 @@ class JobService
             $this->logger->addError(sprintf('[checkService] Job executing for a long time %s', $job-getId()));
           }
         }
-        
-      
+    }
+
+    /**
+     * Get user email
+     *
+     * Gets the email of the user who executed the job
+     */
+    private function getUserEmail()
+    {
+        $email = null;
+        if (null !== $token = $this->tokenStorage->getToken()) {
+            if (is_object($user = $token->getUser())) {
+                $email = $user->getEmail();
+            }
+        }
+
+        return $email;
+    }
+
+
+    /**
+     * 
+     */
+    private function mkdir($path)
+    {
+      $fs = new Filesystem();
+      $fs->mkdir($path);
     }
 }

@@ -1,6 +1,6 @@
-<div class="usctv_mmobjs">
+<div class="pumukit_mmobjs">
 {% for resource in resources %}
-  <div class="usctv_mmobj">
+  <div class="pumukit_mmobj">
     {% if resource.isCollection() %}
     <figure class="album" style="margin:2px 20px 2px 2px; ">
       <a href="{{ url('pumukit_webtv_series_index', {'id': resource.id}) }}">
@@ -19,8 +19,8 @@
     {% else %}
     <div class="thumbnail">
       <a href="{{ url('pumukit_webtv_multimediaobject_index', {'id': resource.id}) }}" >
-        <img class="play_icon_shadow" alt="" width="30" src="{{ asset('bundles/pumukitcmarwebtv/images/usc/sombra.png') }}"/>
-        <img class="play_icon" alt="" width="15" src="{{ asset('bundles/pumukitcmarwebtv/images/usc/play.png') }}"/>
+        <img class="play_icon_shadow" alt="" width="30" src="{{ asset('bundles/pumukitcmarwebtv/images/webtv/sombra.png') }}"/>
+        <img class="play_icon" alt="" width="15" src="{{ asset('bundles/pumukitcmarwebtv/images/webtv/play.png') }}"/>
         <img class="serial" alt="serial_pic" src="{{ resource.getFirstUrlPic() }}" />
       </a>
     </div>
@@ -78,8 +78,7 @@
       {% else %}
         {% set tags = resource.getTags() %}
       {% endif %}
-      {% include 'PumukitWebTVBundle::tags.html.twig' with {'show_tag': show_tag, 'tags': tags } %}
-      {% if ((viewed is not empty) and (not resource.isCollection())) %} 
+      {% if ((viewed) and (not resource.isCollection())) %}
         {% trans %}Views{% endtrans %}:&nbsp;{{ resource.getNumView() }}&nbsp;{% if (resource.getNumView() == 1) %}{% trans %}time{% endtrans %}{% else %}{% trans %}times{% endtrans %}{% endif %}
       {% endif %}
     </div>

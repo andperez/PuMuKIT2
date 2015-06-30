@@ -7,6 +7,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * @MongoDB\Document(repositoryClass="Pumukit\SchemaBundle\Repository\SeriesRepository")
+ * @MongoDB\Indexes({
+ *   @MongoDB\Index(keys={"$**"="text"})
+ * })
  */
 class Series
 {
@@ -282,7 +285,7 @@ class Series
       $locale = $this->locale;
     }
     if (!isset($this->title[$locale])) {
-      return;
+      return '';
     }
 
     return $this->title[$locale];
@@ -334,7 +337,7 @@ class Series
       $locale = $this->locale;
     }
     if (!isset($this->subtitle[$locale])) {
-      return;
+      return '';
     }
 
     return $this->subtitle[$locale];
@@ -386,7 +389,7 @@ class Series
       $locale = $this->locale;
     }
     if (!isset($this->description[$locale])) {
-      return;
+      return '';
     }
 
     return $this->description[$locale];
@@ -438,7 +441,7 @@ class Series
       $locale = $this->locale;
     }
     if (!isset($this->header[$locale])) {
-      return;
+      return '';
     }
 
     return $this->header[$locale];
@@ -490,7 +493,7 @@ class Series
       $locale = $this->locale;
     }
     if (!isset($this->footer[$locale])) {
-      return;
+      return '';
     }
 
     return $this->footer[$locale];
@@ -582,7 +585,7 @@ class Series
       $locale = $this->locale;
     }
     if (!isset($this->keyword[$locale])) {
-      return;
+      return '';
     }
 
     return $this->keyword[$locale];
@@ -634,7 +637,7 @@ class Series
       $locale = $this->locale;
     }
     if (!isset($this->line2[$locale])) {
-      return;
+      return '';
     }
 
     return $this->line2[$locale];
@@ -720,7 +723,7 @@ class Series
    * Get one multimedia object with tag
    *
    * @param Tag $tag
-   * @return MultimediaObject
+   * @return MultimediaObject|null
    */
   public function getMultimediaObjectWithTag(Tag $tag)
   {
@@ -732,7 +735,7 @@ class Series
       }
     }
 
-    return;
+    return null;
   }
 
   /**
@@ -757,7 +760,7 @@ class Series
    * Get multimediaobject with all tags
    *
    * @param array $tags
-   * @return multimedia_object
+   * @return multimedia_object|null
    */
   public function getMultimediaObjectWithAllTags(array $tags)
   {
@@ -767,7 +770,7 @@ class Series
       }
     }
 
-    return;
+    return null;
   }
 
   /**
@@ -793,7 +796,7 @@ class Series
    * Get multimediaobject with any tag
    *
    * @param array $tags
-   * @return MultimediaObject
+   * @return MultimediaObject|null
    */
   public function getMultimediaObjectWithAnyTag(array $tags)
   {
@@ -803,7 +806,7 @@ class Series
       }
     }
 
-    return;
+    return null;
   }
 
   /**
@@ -968,7 +971,7 @@ class Series
       }
     }
 
-    return;
+    return null;
   }
 
   /**

@@ -10,6 +10,9 @@ use Gedmo\Mapping\Annotation as Gedmo;
  * Pumukit\SchemaBundle\Document\MultimediaObject
  *
  * @MongoDB\Document(repositoryClass="Pumukit\SchemaBundle\Repository\MultimediaObjectRepository")
+ * @MongoDB\Indexes({
+ *   @MongoDB\Index(keys={"$**"="text"})
+ * })
  */
 class MultimediaObject
 {
@@ -179,7 +182,7 @@ class MultimediaObject
      * @MongoDB\Int
      * @MongoDB\Increment
      */
-    private $numview;
+    private $numview = 0;
 
     /**
      * @var ArrayCollection $people
@@ -376,7 +379,7 @@ class MultimediaObject
             $locale = $this->locale;
         }
         if (!isset($this->title[$locale])) {
-            return;
+            return '';
         }
 
         return $this->title[$locale];
@@ -428,7 +431,7 @@ class MultimediaObject
             $locale = $this->locale;
         }
         if (!isset($this->subtitle[$locale])) {
-            return;
+            return '';
         }
 
         return $this->subtitle[$locale];
@@ -480,7 +483,7 @@ class MultimediaObject
             $locale = $this->locale;
         }
         if (!isset($this->description[$locale])) {
-            return;
+            return '';
         }
 
         return $this->description[$locale];
@@ -532,7 +535,7 @@ class MultimediaObject
             $locale = $this->locale;
         }
         if (!isset($this->line2[$locale])) {
-            return;
+            return '';
         }
 
         return $this->line2[$locale];
@@ -624,7 +627,7 @@ class MultimediaObject
             $locale = $this->locale;
         }
         if (!isset($this->keyword[$locale])) {
-            return;
+            return '';
         }
 
         return $this->keyword[$locale];
@@ -755,11 +758,13 @@ class MultimediaObject
      */
     public function setBroadcast(Broadcast $broadcast)
     {
-        if ($this->broadcast instanceof Broadcast) {
+        if (($this->broadcast instanceof Broadcast) && ($this->status != MultimediaObject::STATUS_PROTOTYPE)){
             $this->broadcast->decreaseNumberMultimediaObjects();
         }
         $this->broadcast = $broadcast;
-        $broadcast->increaseNumberMultimediaObjects();
+        if ($this->status != MultimediaObject::STATUS_PROTOTYPE) {
+            $broadcast->increaseNumberMultimediaObjects();
+        }
     }
 
     /**
@@ -781,6 +786,16 @@ class MultimediaObject
     public function getTags()
     {
         return $this->tags;
+    }
+
+    /**
+     * Set tags
+     *
+     * @param array $tags
+     */
+    public function setTags(array $tags)
+    {
+        $this->tags = $tags;
     }
 
     /**
@@ -1021,7 +1036,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1067,7 +1082,7 @@ class MultimediaObject
      * Get pic with tag
      *
      * @param  string $tag
-     * @return Pic
+     * @return Pic|null
      */
     public function getPicWithTag($tag)
     {
@@ -1077,7 +1092,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1103,7 +1118,7 @@ class MultimediaObject
      * Get pics with all tags
      *
      * @param  array $tags
-     * @return Pic
+     * @return Pic|null
      */
     public function getPicWithAllTags(array $tags)
     {
@@ -1113,7 +1128,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1139,7 +1154,7 @@ class MultimediaObject
      * Get pic with any tag
      *
      * @param  array $tags
-     * @return Pic
+     * @return Pic|null
      */
     public function getPicWithAnyTag(array $tags)
     {
@@ -1149,7 +1164,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1314,7 +1329,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1340,7 +1355,7 @@ class MultimediaObject
      * Get track with tag
      *
      * @param  string $tag
-     * @return Track
+     * @return Track|null
      */
     public function getTrackWithTag($tag)
     {
@@ -1350,7 +1365,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1376,7 +1391,7 @@ class MultimediaObject
      * Get tracks with all tags
      *
      * @param  array $tags
-     * @return Track
+     * @return Track|null
      */
     public function getTrackWithAllTags(array $tags)
     {
@@ -1386,7 +1401,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1412,7 +1427,7 @@ class MultimediaObject
      * Get track with any tag
      *
      * @param  array $tags
-     * @return Track
+     * @return Track|null
      */
     public function getTrackWithAnyTag(array $tags)
     {
@@ -1422,7 +1437,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1474,7 +1489,7 @@ class MultimediaObject
      * @param  array           $all_tags
      * @param  array           $not_any_tags
      * @param  array           $not_all_tags
-     * @return Track
+     * @return Track|null
      */
     public function getFilteredTrackWithTags(
                                             array $any_tags = array(),
@@ -1624,7 +1639,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1650,7 +1665,7 @@ class MultimediaObject
      * Get material with tag
      *
      * @param  string   $tag
-     * @return Material
+     * @return Material|null
      */
     public function getMaterialWithTag($tag)
     {
@@ -1660,7 +1675,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1686,7 +1701,7 @@ class MultimediaObject
      * Get material with all tags
      *
      * @param  array    $tags
-     * @return Material
+     * @return Material|null
      */
     public function getMaterialWithAllTags(array $tags)
     {
@@ -1696,7 +1711,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1722,7 +1737,7 @@ class MultimediaObject
      * Get material with any tag
      *
      * @param  array    $tags
-     * @return Material
+     * @return Material|null
      */
     public function getMaterialWithAnyTag(array $tags)
     {
@@ -1732,7 +1747,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1889,7 +1904,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1915,7 +1930,7 @@ class MultimediaObject
      * Get link with tag
      *
      * @param  string $tag
-     * @return Link
+     * @return Link|null
      */
     public function getLinkWithTag($tag)
     {
@@ -1925,7 +1940,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1951,7 +1966,7 @@ class MultimediaObject
      * Get links with all tags
      *
      * @param  array $tags
-     * @return Link
+     * @return Link|null
      */
     public function getLinkWithAllTags(array $tags)
     {
@@ -1961,7 +1976,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -1987,7 +2002,7 @@ class MultimediaObject
      * Get link with any tag
      *
      * @param  array $tags
-     * @return Link
+     * @return Link|null
      */
     public function getLinkWithAnyTag(array $tags)
     {
@@ -1997,7 +2012,7 @@ class MultimediaObject
             }
         }
 
-        return;
+        return null;
     }
 
     /**
@@ -2416,7 +2431,7 @@ class MultimediaObject
      *
      * @param string $key
      *
-     * @return string
+     * @return string|null
      */
     public function getProperty($key)
     {

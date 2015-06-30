@@ -2,14 +2,17 @@
 
 namespace Pumukit\Cmar\WebTVBundle\Controller;
 
+use Symfony\Component\HttpFoundation\Request;
 use Pumukit\WebTVBundle\Controller\MultimediaObjectController as Base;
 use Pumukit\SchemaBundle\Document\MultimediaObject;
+use Pumukit\SchemaBundle\Document\Broadcast;
 
 class MultimediaObjectController extends Base
 {
-    public function preExecute(MultimediaObject $multimediaObject)
+    public function preExecute(MultimediaObject $multimediaObject, Request $request)
     {
         if ($opencasturl = $multimediaObject->getProperty("opencasturl")) {
+            $this->testBroadcast($multimediaObject, $request);
             $this->updateBreadcrumbs($multimediaObject);
             $this->incNumView($multimediaObject);
             $userAgent = $this->getRequest()->headers->get('user-agent');
@@ -56,5 +59,26 @@ class MultimediaObjectController extends Base
             $version = floor($match[2]);
 
         return $version;
+    }
+
+
+   public function testBroadcast(MultimediaObject $multimediaObject, Request $request)
+   {
+      if (($broadcast = $multimediaObject->getBroadcast()) && 
+          (Broadcast::BROADCAST_TYPE_PUB !== $broadcast->getBroadcastTypeId())) {
+
+          if ((!$this->container->hasParameter('pumukit_cmar_web_tv.cas_url')) && 
+              (!$this->container->hasParameter('pumukit_cmar_web_tv.cas_port')) &&
+              (!$this->container->hasParameter('pumukit_cmar_web_tv.cas_uri')) &&
+              (!$this->container->hasParameter('pumukit_cmar_web_tv.cas_allowed_ip_clients'))) {
+              throw $this->createNotFoundException('PumukitCmarWebTVBundle not configured.');
+          }
+
+        \phpCAS::forceAuthentication();
+
+        if(!in_array(\phpCAS::getUser(), array($broadcast->getName(), "tv", "prueba", "adminmh", "admin", "sistemas.uvigo"))) {
+          throw $this->createAccessDeniedException('Unable to access this page!');        
+        }
+      }
     }
 }

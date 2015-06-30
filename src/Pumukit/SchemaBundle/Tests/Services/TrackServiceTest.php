@@ -21,6 +21,7 @@ class TrackServiceTest extends WebTestCase
     private $factoryService;
     private $resourcesDir;
     private $logger;
+    private $tokenStorage;
 
     public function __construct()
     {
@@ -38,6 +39,8 @@ class TrackServiceTest extends WebTestCase
           ->getRepository('PumukitSchemaBundle:MultimediaObject');
         $this->factoryService = $kernel->getContainer()
           ->get('pumukitschema.factory');
+        $this->tokenStorage = $kernel->getContainer()
+          ->get('security.token_storage');
 
         $this->resourcesDir = realpath(__DIR__.'/../Resources');
     }
@@ -63,7 +66,7 @@ class TrackServiceTest extends WebTestCase
         $inspectionService->expects($this->any())->method('getDuration')->will($this->returnValue(5));
         $jobService = new JobService($this->dm, $profileService, $cpuService, 
                                      $inspectionService, $dispatcher, $this->logger, 
-                                     "test", null);
+                                     $this->tokenStorage, "test", null);
         $this->trackService = new TrackService($this->dm, $jobService, $profileService, null, true);
 
         $this->tmpDir = $this->trackService->getTempDirs()[0];
@@ -79,9 +82,9 @@ class TrackServiceTest extends WebTestCase
         $this->assertEquals(0, count($multimediaObject->getTracks()));
         $this->assertEquals(0, count($this->repoJobs->findAll()));
 
-        $originalFile = $this->resourcesDir.DIRECTORY_SEPARATOR.'camera.mp4';
+        $originalFile = $this->resourcesDir.'/camera.mp4';
 
-        $filePath = $this->resourcesDir.DIRECTORY_SEPARATOR.'cameraCopy.mp4';
+        $filePath = $this->resourcesDir.'/cameraCopy.mp4';
         if (copy($originalFile, $filePath)){
           $file = new UploadedFile($filePath, 'camera.mp4', null, null, null, true);
           
@@ -315,41 +318,26 @@ class TrackServiceTest extends WebTestCase
     {
         $profiles = array(
                           'MASTER_COPY' => array(
-                                                 'id' => 1,
-                                                 'name' => 'master_copy',
-                                                 'rank' => 1,
                                                  'display' => false,
                                                  'wizard' => true,
                                                  'master' => true,
-                                                 'format' => '???',
-                                                 'codec' => '??',
-                                                 'mime_type' => '??',
-                                                 'extension' => '???',
                                                  'resolution_hor' => 0,
                                                  'resolution_ver' => 0,
-                                                 'bitrate' => '??',
-                                                 'framerate' => 0,
+                                                 'framerate' => '0',
                                                  'channels' => 1,
                                                  'audio' => false,
                                                  'bat' => 'cp "{{input}}" "{{output}}"',
-                                                 'file_cfg' => '??',
                                                  'streamserver' => array(
-                                                                         'streamserver_type' => ProfileService::STREAMSERVER_STORE,
-                                                                         'ip' => '127.0.0.1',
+                                                                         'type' => ProfileService::STREAMSERVER_STORE,
+                                                                         'host' => '127.0.0.1',
                                                                          'name' => 'Localmaster',
                                                                          'description' => 'Local masters server',
-                                                                         'dir_out' => __DIR__.'/../Resources/dir_out',
-                                                                         'url_out' => ''
-                                                                         ),
+                                                                         'dir_out' => __DIR__.'/../Resources/dir_out'                                                         ),
                                                  'app' => 'cp',
                                                  'rel_duration_size' => 1,
-                                                 'rel_duration_trans' => 1,
-                                                 'prescript' => '?????'
+                                                 'rel_duration_trans' => 1
                                                  ),
                           'MASTER_VIDEO_H264' => array(
-                                                       'id' => 2,
-                                                       'name' => 'master_video_h264',
-                                                       'rank' => 2,
                                                        'display' => false,
                                                        'wizard' => true,
                                                        'master' => true,
@@ -360,42 +348,21 @@ class TrackServiceTest extends WebTestCase
                                                        'resolution_hor' => 0,
                                                        'resolution_ver' => 0,
                                                        'bitrate' => '1 Mbps',
-                                                       'framerate' => 25,
+                                                       'framerate' => '25/1',
                                                        'channels' => 1,
                                                        'audio' => false,
-                                                       'bat' => 'BitRate=$(/usr/local/bin/ffprobe "{{input}}" -v 0 -show_format -print_format default=nk=1:nw=1 | sed -n 9p)
-                                                                     [[ "$(( BitRate ))" -gt 6000000 ]] && : $(( BitRate = 6000000 ))
-
-                                                                     FrameRate=$(/usr/local/bin/ffprobe "{{input}}" -v 0 -show_streams -select_streams v -print_format default=nk=1:nw=1 | sed -n 18p)
-
-                                                                     BufSize=$(( BitRate*20/FrameRate ))
-
-                                                                     AudioSampleRate=$(/usr/local/bin/ffprobe "{{input}}" -v 0 -show_streams -select_streams a -print_format default=nk=1:nw=1 |sed -n 10p)
-
-                                                                     AudioBitRate=$(/usr/local/bin/ffprobe "{{input}}" -v 0 -show_streams -select_streams a -print_format default=nk=1:nw=1 |sed -n 22p)
-
-                                                                     width=$(/usr/local/bin/ffprobe "{{input}}" -v 0 -show_streams -select_streams v  -print_format default=nk=1:nw=1 |sed -n 9p)
-
-                                                                     [[ "$(( width % 2 ))" -ne 0 ]] && : $(( width += 1 ))
-
-                                                                     height=$(/usr/local/bin/ffprobe "{{input}}" -v 0 -show_streams -select_streams v  -print_format default=nk=1:nw=1 |sed -n 10p)
-
-                                                                     [[ "$(( height % 2 ))" -ne 0 ]] && : $(( height += 1 ))
-
-                                                                     /usr/local/bin/ffmpeg -y -i "{{input}}" -acodec libfdk_aac -b:a $AudioBitRate -ac 2 -ar $AudioSampleRate -vcodec libx264 -r 25 -preset slow -crf 15 -maxrate $BitRate -bufsize $BufSize -s $width"x"$height -threads 0 "{{output}}"',
-                                                       'file_cfg' => '',
+                                                       'bat' => 'avconv -y -i "{{input}}" -acodec libvo_aacenc -vcodec libx264 -preset slow -crf 15 -threads 0 "{{output}}"',
                                                        'streamserver' => array(
-                                                                               'streamserver_type' => ProfileService::STREAMSERVER_STORE,
-                                                                               'ip' => '192.168.5.125',
+                                                                               'type' => ProfileService::STREAMSERVER_STORE,
+                                                                               'host' => '192.168.5.125',
                                                                                'name' => 'Download',
                                                                                'description' => 'Download server',
                                                                                'dir_out' => __DIR__.'/../Resources/dir_out',
                                                                                'url_out' => 'http://localhost:8000/downloads/'
                                                                                ),
-                                                       'app' => 'ffmpeg',
+                                                       'app' => 'avconv',
                                                        'rel_duration_size' => 1,
-                                                       'rel_duration_trans' => 1,
-                                                       'prescript' => '?????'
+                                                       'rel_duration_trans' => 1
                                                        )
                           );
 
@@ -407,8 +374,7 @@ class TrackServiceTest extends WebTestCase
         $mmobjs = $this->repoMmobj->findAll();
 
         foreach($mmobjs as $mm){
-            $mmDir = $this->getDemoProfiles()['MASTER_COPY']['streamserver']['dir_out'].DIRECTORY_SEPARATOR.$mm->getSeries()->getId().DIRECTORY_SEPARATOR;
-
+            $mmDir = $this->getDemoProfiles()['MASTER_COPY']['streamserver']['dir_out'].'/'.$mm->getSeries()->getId().'/';
             if (is_dir($mmDir)){
                 $files = glob($mmDir.'*', GLOB_MARK);
                 foreach ($files as $file) {
@@ -418,6 +384,18 @@ class TrackServiceTest extends WebTestCase
                 }
 
                 rmdir($mmDir);
+            }
+
+            $tmpMmDir = '/tmp/'.$mm->getId().'/';
+            if (is_dir($tmpMmDir)){
+                $files = glob($tmpMmDir.'*', GLOB_MARK);
+                foreach ($files as $file) {
+                    if (is_writable($file)){
+                      unlink($file);
+                    }
+                }
+
+                rmdir($tmpMmDir);
             }
         }
     }

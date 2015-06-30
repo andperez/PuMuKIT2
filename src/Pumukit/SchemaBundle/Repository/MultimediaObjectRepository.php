@@ -90,7 +90,7 @@ class MultimediaObjectRepository extends DocumentRepository
      */
     public function findByPersonId($personId)
     {
-        return $this->createQueryBuilder()
+        return $this->createStandardQueryBuilder()
           ->field('people.people._id')->equals(new \MongoId($personId))
           ->getQuery()
           ->execute();
@@ -625,9 +625,28 @@ class MultimediaObjectRepository extends DocumentRepository
         $qb->field('broadcast')->references($broadcast);
 
         // Includes PUCHWEBTV code
+        $tagRepo = $this->dm->getRepository('PumukitSchemaBundle:Tag');
+        $placeTag = $tagRepo->findOneByCod('PLACE');
+        $genreTag = $tagRepo->findOneByCod('GENRE');
+        $descendantOfPlace = false;
+        $descendantOfGenre = false;
         $codes = array();
         foreach ($multimediaObject->getTags() as $tag) {
-            $codes[] = $tag->getCod();
+            if ($placeTag) {
+                if ($tag->isDescendantOf($placeTag)) {
+                    $descendantOfPlace = true;
+                }
+            }
+            if ($genreTag) {
+                if ($tag->isDescendantOf($genreTag)) {
+                    $descendantOfGenre = true;
+                }
+            }
+            if (!($descendantOfPlace || $descendantOfGenre)) {
+              $codes[] = $tag->getCod();
+            }
+            $descendantOfPlace = false;
+            $descendantOfGenre = false;
         }
         $qb->field('tags.cod')->all($codes);
 

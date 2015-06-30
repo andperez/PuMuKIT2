@@ -58,9 +58,10 @@ class TagService
    *
    * @param MultimediaObject $mmobj
    * @param string $tagId
+   * @param  boolean          $executeFlush
    * @return Array[Tag] removed tags
    */
-  public function removeTagFromMultimediaObject(MultimediaObject $mmobj, $tagId)
+  public function removeTagFromMultimediaObject(MultimediaObject $mmobj, $tagId, $executeFlush=true)
   {
       $removeTags = array();
 
@@ -82,8 +83,42 @@ class TagService
       } while ($tag = $tag->getParent());
 
       $this->dm->persist($mmobj);
-      $this->dm->flush();
+      if ($executeFlush) {
+          $this->dm->flush();
+      }
 
       return $removeTags;
   }
+  
+
+  /**
+   * Reset the tags of an array of MultimediaObjects
+   *
+   * @param array[MultimediaObject] $mmobjs
+   * @param array[string] $tags
+   * @return array[Tag] removed tags
+   */
+  public function resetTags(array $mmobjs, array $tags)
+  {
+    $modifyTags = array();
+
+    foreach($mmobjs as $mmobj) {
+        foreach($mmobj->getTags() as $originalEmbeddedTag) {
+            $originalTag = $this->repository->find($originalEmbeddedTag->getId());
+            $originalTag->decreaseNumberMultimediaObjects();
+            $this->dm->persist($originalTag);
+        }
+        $mmobj->setTags($tags);
+        $this->dm->persist($mmobj);
+        foreach($tags as $embeddedTag) {
+            $tag = $this->repository->find($embeddedTag->getId());
+            $tag->increaseNumberMultimediaObjects();
+            $this->dm->persist($tag);
+        }
+
+    }
+    
+    $this->dm->flush();
+  }
+  
 }

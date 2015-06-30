@@ -23,9 +23,12 @@ class PicExtractorService
         $this->mmsPicService = $mmsPicService;
         $this->width = $width;
         $this->height = $height;
-        $this->targetPath = $targetPath;
+        $this->targetPath = realpath($targetPath);
+        if (!$this->targetPath){
+            throw new \InvalidArgumentException("The path '".$targetPath."' for storing Pic does not exist.");
+        }
         $this->targetUrl = $targetUrl;
-        $this->command = $command ?: 'ffmpeg -ss {{ss}} -y -i "{{input}}" -r 1 -vframes 1 -s {{size}} -f image2 "{{output}}"';
+        $this->command = $command ?: 'avprobe -ss {{ss}} -y -i "{{input}}" -r 1 -vframes 1 -s {{size}} -f image2 "{{output}}"';
     }
 
     /**
@@ -41,8 +44,13 @@ class PicExtractorService
         if (!file_exists($track->getPath())){
             return "Error in data autocomplete of multimedia object.";
         }
-        
-        $num_frames = $track->getFramerate() * $track->getDuration();
+
+        if (false !== strpos($track->getFramerate(), '/')) {
+            $aux = explode('/', $track->getFramerate());
+            $num_frames = intval($track->getDuration() * intval($aux[0]) / intval($aux[1]));
+        } else {
+            $num_frames = intval($track->getFramerate() * $track->getDuration());
+        }
 
         if((is_null($numframe)||($num_frames == 0))){
             $num = 125 * (count($multimediaObject->getPics())) + 1;

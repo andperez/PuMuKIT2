@@ -30,10 +30,14 @@ class MultimediaObjectController extends SortableAdminController
         $factoryService = $this->get('pumukitschema.factory');
 
         $sessionId = $this->get('session')->get('admin/series/id', null);
-        $series = $factoryService->findSeriesById($request->get('id'), $sessionId);
+        $series = $factoryService->findSeriesById($request->query->get('id'), $sessionId);
         if(!$series) throw $this->createNotFoundException();
 
         $this->get('session')->set('admin/series/id', $series->getId());
+
+        if($request->query->has('mmid')) {
+            $this->get('session')->set('admin/mms/id', $request->query->get('mmid'));
+        }
 
         $mms = $this->getListMultimediaObjects($series);
 
@@ -133,7 +137,7 @@ class MultimediaObjectController extends SortableAdminController
 
         $jobs = $this->get('pumukitencoder.job')->getJobsByMultimediaObjectId($resource->getId());
 
-        $notMasterProfiles = $this->get('pumukitencoder.profile')->getMasterProfiles(false);
+        $notMasterProfiles = $this->get('pumukitencoder.profile')->getProfiles(null, true, false);
 
         $template = $resource->isPrototype() ? '_template' : '';
 
@@ -335,7 +339,7 @@ class MultimediaObjectController extends SortableAdminController
         try{
             $addedTags = $tagService->addTagToMultimediaObject($resource, $request->get('tagId'));
         }catch (\Exception $e){
-            $this->addFlash('success', $e->getMessage());
+            throw new \Exception($e->getMessage());
         }
 
         $json = array('added' => array(), 'recommended' => array());
@@ -365,7 +369,7 @@ class MultimediaObjectController extends SortableAdminController
         try{
             $deletedTags = $tagService->removeTagFromMultimediaObject($resource, $request->get('tagId'));
         }catch (\Exception $e){
-            $this->addFlash('success', $e->getMessage());
+            throw new \Exception($e->getMessage());
         }
 
         $json = array('deleted' => array(), 'recommended' => array());
@@ -481,6 +485,21 @@ class MultimediaObjectController extends SortableAdminController
         if ($resourceId === $this->get('session')->get('admin/mms/id')){
             $this->get('session')->remove('admin/mms/id');
         }
+
+        return $this->redirect($this->generateUrl('pumukitnewadmin_mms_list', 
+                                                  array('seriesId' => $seriesId)));
+    }
+
+    /**
+     * Clone action
+     */
+    public function cloneAction(Request $request)
+    {
+        $resource = $this->findOr404($request);
+        $resourceId = $resource->getId();
+        $seriesId = $resource->getSeries()->getId();
+
+        $this->get('pumukitschema.factory')->cloneMultimediaObject($resource);
 
         return $this->redirect($this->generateUrl('pumukitnewadmin_mms_list', 
                                                   array('seriesId' => $seriesId)));
@@ -621,6 +640,26 @@ class MultimediaObjectController extends SortableAdminController
         $dm->flush();
 
         return $this->redirect($this->generateUrl('pumukitnewadmin_mms_list'));      
+    }
+
+    /**
+     * Sync tags for all multimedia objects of a series
+     */
+    public function syncTagsAction(Request $request)
+    {
+        $multimediaObjectRepo = $this->get('doctrine_mongodb.odm.document_manager')
+          ->getRepository('PumukitSchemaBundle:MultimediaObject');
+        $multimediaObject = $multimediaObjectRepo
+          ->find($request->query->get('id'));
+
+        if(!$multimediaObject)
+          return new JsonResponse("Not Found", 404);
+
+        $mms = $multimediaObjectRepo->findBySeries($multimediaObject->getSeries())->toArray();
+        $tags = $multimediaObject->getTags()->toArray();
+        $this->get('pumukitschema.tag')->resetTags($mms, $tags);
+        
+        return new JsonResponse("");
     }
 
     private function dispatchUpdate($multimediaObject)

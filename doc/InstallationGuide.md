@@ -1,14 +1,14 @@
 PuMuKIT-2 Installation Guide
 ====================================
 
-*This page is updated to the 2.0 release* 
+*This page is updated to the 2.1 release* 
 
 Requirements
 -------------------------------------
 
-PuMuKIT-2 is a LAMP application, created with the Symfony2 framework. It uses ffmpeg (or libav-tools) to analyze the audiovisual data, as well as to transcode them.
+PuMuKIT-2 is a LAMP application, created with the Symfony2 framework. It uses libav-tools (or ffmpeg) to analyze the audiovisual data, as well as to transcode them.
 
-The requirements for installation are linux, nginx, mongo, ffmpeg, php5. You must have installed a version of ffmpeg encoding to h264 and aac. Also the following modules are required php5: php5-ffmpeg, php5-cli, php5-mongo, php5-ldap, php5-curl and php5-intl.
+The requirements for installation are linux, nginx, libav-tools, php5 and mongo. Libav-tools with h264 and aac support is needed. Also the following php5 modules are required: php5-json, php5-cli, php5-mongo, php5-ldap, php5-curl and php5-intl. Make sure text search is enabled for your mongodb (version 2.6+).
 
 Use [composer](https://getcomposer.org/) to check and install the dependencies
 
@@ -19,16 +19,26 @@ Installation
 
 Setup a development environment on Ubuntu 14.04:
 
-1. Install dependencies of PuMuKIT-2 (see requirements):
+1. Update APT source list to install last version of MongoDB.
 
     ```
-    sudo apt-get install git php5-fpm php5-cli nginx-full
+    sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+    echo "deb http://repo.mongodb.org/apt/ubuntu "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list
+    sudo apt-get update
+    ```
+
+
+2. Install dependencies of PuMuKIT-2 (see requirements):
+
+    ```
+    sudo apt-get install git curl nginx-full
+    sudo apt-get install php5-fpm php5-cli php5-curl php5-intl php5-json
     sudo apt-get install php5-intl php5-xdebug php5-curl
-    sudo apt-get install mongodb php5-mongo 
-    sudo apt-get install mediainfo libav-tools
+    sudo apt-get install mongodb-org php5-mongo
+    sudo apt-get install libav-tools libavcodec-extra
     ```
 
-2. Download the last version of PuMuKIT-2:
+3. Download the last version of PuMuKIT-2:
 
     ```
     git clone https://github.com/campusdomar/PuMuKIT2.git /var/www/pumukit2
@@ -36,19 +46,19 @@ Setup a development environment on Ubuntu 14.04:
     git checkout master
     ```
 
-3. Install [composer](https://getcomposer.org/).
+4. Install [composer](https://getcomposer.org/).
 
     ```
     curl -sS https://getcomposer.org/installer | php
     ```
 
-4. Install dependencies
+5. Install dependencies
 
     ```
     php composer.phar install
     ```
 
-5. Prepare environment (check requirements, init mongo db, clear cache)
+6. Prepare environment (check requirements, init mongo db, clear cache)
 
     ```
     php app/check.php
@@ -56,37 +66,38 @@ Setup a development environment on Ubuntu 14.04:
     php app/console cache:clear
     ```
 
-6. Create the admin user
+7. Create the admin user
 
     ```
     php app/console fos:user:create admin --super-admin
     ```
     
-7. Load default values (tags, broadcasts and roles).
+8. Load default values (tags, broadcasts and roles).
 
     ```
     php app/console pumukit:init:repo all --force
     ```
 
-8. [Optional] Load example data (series and multimedia objects)
+9. [Optional] Load example data (series and multimedia objects)
 
     ```
     php app/console pumukit:init:example  --force    
     ```
     
-9. Add NGINX config file.
+10. Add NGINX config file.
 
     ```
-    cp doc/conf_files/nginx/default /etc/nginx/sites-available/default
+    sudo cp doc/conf_files/nginx/default /etc/nginx/sites-available/default
     ```
 
-10. Restart server
+11. Restart server
 
     ```
-    service nginx restart 
+    sudo service php5-fpm restart
+    sudo service nginx restart 
     ```
 
-11. Connect and enjoy
+12. Connect and enjoy
 
     * Connect to the frontend here: `http://{MyPuMuKIT_IP}/`
     * Connect to the backend (Admin UI) with the user created on step 6 here: `http://{MyPuMuKIT_IP}/admin`
@@ -164,6 +175,14 @@ sudo service ningx restart
     ```
     sudo chown -R www-data:www-data web/storage/ web/uploads/
     ```
+
+
+**Enable MongoDB text index**
+
+Use MongoDB 2.6 or upper, the text search feature is enabled by default. In Ubuntu 14.04 you can install the last version of MongoDB using the next documentation:
+
+ * http://docs.mongodb.org/manual/tutorial/install-mongodb-on-ubuntu/
+
 
 **403 Forbidden access to config.php and app_dev.php**
 

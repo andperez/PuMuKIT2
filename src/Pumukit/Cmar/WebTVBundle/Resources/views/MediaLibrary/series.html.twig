@@ -1,4 +1,4 @@
-<dl class="usctv_mmobj">
+<dl class="pumukit_mmobj">
   <dt class="thumbnail">
     <figure class="album">
       <a href="{{ url('pumukit_webtv_series_index', {'id': series.id}) }}">
@@ -23,7 +23,7 @@
     </div>
     <div class="mmobj_bottom">
       {% set count_mm = (series|count_multimedia_objects) %}
-      [{{ count_mm }}{% if (1 == count_mm) %}{% trans %}Video{% endtrans %}{% else %}{% trans %}Videos{% endtrans %}{% endif %}]
+      [{{ count_mm }} {% if (1 == count_mm) %}{% trans %}Video{% endtrans %}{% else %}{% trans %}Videos{% endtrans %}{% endif %}]
     </div>
   </dd>
 </dl>

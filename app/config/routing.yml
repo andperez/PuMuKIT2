@@ -3,22 +3,13 @@ pumukit_oai:
     type:     annotation
     prefix:   /
 
-#pumukitcmarwebtv:
-#    resource: "@PumukitCmarWebTVBundle/Resources/config/routing.yml"
-#    prefix: /
-
-pumukit_cmar_podcast:
-    resource: "@PumukitCmarPodcastBundle/Controller/"
+pumukit_opencast:
+    resource: "@PumukitOpencastBundle/Controller/"
     type:     annotation
     prefix:   /
 
-# pumukit_cmar_sonar:
-#     resource: "@PumukitCmarSonarBundle/Controller/"
-#     type:     annotation
-#     prefix:   /
-
-pumukit_opencast:
-    resource: "@PumukitOpencastBundle/Controller/"
+pumukit_encoder:
+    resource: "@PumukitEncoderBundle/Controller/"
     type:     annotation
     prefix:   /
 
@@ -49,10 +40,6 @@ pumukit_encoder:
     resource: "@PumukitEncoderBundle/Controller/"
     type:     annotation
     prefix:   /
-
-pumukitadmin:
-    resource: @PumukitAdminBundle/Resources/config/routing.yml
-    prefix:   /old
 
 pumukitnewadmin:
     resource: @PumukitNewAdminBundle/Resources/config/routing.yml

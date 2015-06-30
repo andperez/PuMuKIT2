@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Pumukit\SchemaBundle\Document\Track;
@@ -92,7 +93,7 @@ class TrackController extends Controller
             try {
                 $multimediaObject = $this->get('pumukitschema.track')->updateTrackInMultimediaObject($multimediaObject);
             } catch (\Exception $e) {
-                $this->get('session')->getFlashBag()->add('error', $e->getMessage());
+                return new Response($e->getMessage(), 400);
             }
 
             return $this->redirect($this->generateUrl('pumukitnewadmin_track_list', array('id' => $multimediaObject->getId())));
@@ -175,7 +176,7 @@ class TrackController extends Controller
     {
         $jobs = $this->get('pumukitencoder.job')->getJobsByMultimediaObjectId($multimediaObject->getId());
 
-        $notMasterProfiles = $this->get('pumukitencoder.profile')->getMasterProfiles(false);
+        $notMasterProfiles = $this->get('pumukitencoder.profile')->getProfiles(null, true, false);
 
         return array(
                      'mm' => $multimediaObject,
@@ -187,6 +188,8 @@ class TrackController extends Controller
     }
 
     /**
+     * TODO See: Pumukit\EncoderBundle\Controller\InfoController::retryJobAction
+     *
      * @ParamConverter("multimediaObject", class="PumukitSchemaBundle:MultimediaObject", options={"id" = "mmId"})
      * @ParamConverter("job", class="PumukitEncoderBundle:Job", options={"id" = "jobId"})
      */
@@ -199,6 +202,8 @@ class TrackController extends Controller
     }
 
     /**
+     * TODO See: Pumukit\EncoderBundle\Controller\InfoController::infoJobAction 
+     *
      * @ParamConverter("multimediaObject", class="PumukitSchemaBundle:MultimediaObject", options={"id" = "mmId"})
      * @ParamConverter("job", class="PumukitEncoderBundle:Job", options={"id" = "jobId"})
      * @Template
@@ -210,6 +215,8 @@ class TrackController extends Controller
     }
 
     /**
+     * TODO See: Pumukit\EncoderBundle\Controller\InfoController::deleteJobAction
+     *
      * @ParamConverter("multimediaObject", class="PumukitSchemaBundle:MultimediaObject", options={"id" = "mmId"})
      */
     public function deleteJobAction(MultimediaObject $multimediaObject, Request $request)
@@ -220,6 +227,19 @@ class TrackController extends Controller
 
         return $this->redirect($this->generateUrl('pumukitnewadmin_track_list', array('id' => $multimediaObject->getId())));
     }
+
+    /**
+     * TODO See: Pumukit\EncoderBundle\Controller\InfoController::updateJobPriorityAction
+     *
+     */
+    public function updateJobPriorityAction(Request $request)
+    {
+        $priority = $request->get('priority');
+        $jobId = $request->get('jobId');
+        $this->get('pumukitencoder.job')->updateJobPriority($jobId, $priority);
+        
+        return new JsonResponse(array("jobId" => $jobId, "priority" => $priority));
+    }    
 
     /**
      * @ParamConverter("multimediaObject", class="PumukitSchemaBundle:MultimediaObject", options={"id" = "mmId"})

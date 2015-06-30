@@ -39,6 +39,7 @@ class PumukitExtension extends \Twig_Extension
             new \Twig_SimpleFilter('first_url_pic', array($this, 'getFirstUrlPicFilter')),
             new \Twig_SimpleFilter('precinct_fulltitle', array($this, 'getPrecinctFulltitle')),
             new \Twig_SimpleFilter('count_multimedia_objects', array($this, 'countMultimediaObjects')),
+            new \Twig_SimpleFilter('duration_minutes_seconds', array($this, 'getDurationInMinutesSeconds')),
         );
     }
 
@@ -50,6 +51,7 @@ class PumukitExtension extends \Twig_Extension
         return array(
                      new \Twig_SimpleFunction('public_broadcast', array($this, 'getPublicBroadcast')),
                      new \Twig_SimpleFunction('precinct', array($this, 'getPrecinct')),
+                     new \Twig_SimpleFunction('precinct_of_series', array($this, 'getPrecinctOfSeries')),
                      );
     }
 
@@ -109,8 +111,37 @@ class PumukitExtension extends \Twig_Extension
         $precinctTag = null;
 
         foreach ($embeddedTags as $tag) {
-            if (0 === strpos($tag->getCod(), 'PRECINCT')) {
+            if ((0 === strpos($tag->getCod(), 'PRECINCT')) && ('PRECINCT' !== $tag->getCod())) {
                 return $tag;
+            }
+        }
+
+        return $precinctTag;
+    }
+
+    /**
+     * Get precinct of Series
+     *
+     * @param ArrayCollection $multimediaObjects
+     * @return EmbbededTag|null
+     */
+    public function getPrecinctOfSeries($multimediaObjects)
+    {
+        $precinctTag = false;
+        $precinctCode = null;
+        $first = true;
+        foreach ($multimediaObjects as $multimediaObject) {
+            if ($first) {
+                $precinctTag = $this->getPrecinct($multimediaObject->getTags());
+                if (!$precinctTag) return false;
+                $precinctCode = $precinctTag->getCod();
+                $first = false;
+            } else {
+                $precinctTag = $this->getPrecinct($multimediaObject->getTags());
+                if (!$precinctTag) return false;
+                if ($precinctCode != $precinctTag->getCod()) {
+                    return false;
+                }
             }
         }
 
@@ -162,4 +193,20 @@ class PumukitExtension extends \Twig_Extension
     {
         return $this->dm->getRepository('PumukitSchemaBundle:MultimediaObject')->countInSeries($series);
     }
+
+    /**
+     * Get duration in minutes and seconds
+     *
+     * @param int $duration
+     * @return string
+     */
+    public function getDurationInMinutesSeconds($duration)
+    {
+      $minutes = floor($duration / 60);
+
+      $seconds = $duration % 60;
+      if ($seconds < 10 ) $seconds = '0' . $seconds;
+
+      return $minutes ."' ". $seconds . "''";
+   }
 }

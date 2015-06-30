@@ -819,7 +819,7 @@ div.pumukit_mini_mmobjs .pumukit_mini_mmobj .info{
 }
 
 
-div.pumukit_mmobjs .pumukit_mmobj .thumbnail, div.pumukit_mini_mmobjs .pumukit_mini_mmobj .thumbnail{
+div.pumukit_mmobjs .pumukit_mmobj .pmk_thumbnail, div.pumukit_mini_mmobjs .pumukit_mini_mmobj .pmk_thumbnail{
   display:inline;
   float:left;
   padding: 0px;
@@ -876,6 +876,17 @@ transform: scale(0.94);
 }
  
  
+img.play_icon, img.play_icon_shadow{
+  position:absolute;
+  z-index:1;
+  top: 6px;
+  left: 6px;
+}
+
+img.play_icon_shadow{
+  opacity:0.60;
+}
+
 img.play_icon{
   left:10px;
   top:10px;
